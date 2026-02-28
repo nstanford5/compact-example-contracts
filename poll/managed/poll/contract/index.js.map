@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../",
+  "sources": ["poll.compact", "compiler/standard-library.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAcA;;;;;;;;;;MAKA,AAAA,WAMC;;;;;cAN0B,WAAkB;cAAE,IAAa;;;;;;;;;;;;;;;;;;;;;;;;;yCAAjC,WAAkB,+BAAE,IAAa;;;;;;;;;6CAAjC,WAAkB;6CAAE,IAAa;;;OAM3D;MAED,AAAA,UAQC;;;;;cARyB,MAAa;cAAE,IAAa;;;;;;;;;;;;;;;;;;;;;;;;;yCAA5B,MAAa,+BAAE,IAAa;;;;;;;;;4CAA5B,MAAa;4CAAE,IAAa;;;OAQrD;MAMD,AAAA,SAEC;;OAAA;;;;;;GA1BA;EAHD;;;;;UAAY,IAAa;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IANzB;;;;;;;;;yEAA+B;IAC/B;;;;;;;;;yEAA6B;IAC7B;;;;;;;;;yEAA6B;IAC7B;;;;;;;;;yEAAoC;IACpC;;;;;;;;;yEAA2B;UAGvB,KAAK,qBAAsB,IAAE;IAA7B;;;;;;;2HAAA,KAAK;;yEAAA;IACL;;;;;;;;;yEAAK;;;;;;;GACR;ECjBD,AAAA,kBAAA;oEAAA;;;EDmBA,AAAA,cAMC,4BAN0B,WAAkB,EAAE,IAAa;4DAC9B,IAAE;kEAAM;;;;;;;;;;;uIAAK;;kEAChC;;;;;;;;;;;uIAAK;;;kEAAS;;;;;;;;;;;uIAAK;;;0CACnB,WAAS;;0CAAS,WAAS;;UAClC,KAAU;4EAAgB,WAAS;;uCAAe,IAAE;IAApD;;;;;;;2HAAA,KAAU;;yEAAA;IACV;;;;;;;;;yEAAK;;GACR;EAED,AAAA,aAQC,4BARyB,MAAa,EAAE,IAAa;oDAE3C;;;;;;;;;;;yHAAK;;;;UACN,WAA+C;kFAAtB,MAAI;;6CAAe,IAAE;0CAE7C,WAAS;kEAAI;;;;;;;;;;;uIAAU;;UACxB,YAA2B,GAAL,MAAI;sBAChC,YAAU;YAAQ,KAAK;MAAL;;;;;;;;;;+FAAA,KAAK;;;;0EAAA;;YAAgB,KAAK;MAAL;;;;;;;;;;+FAAA,KAAK;;;;0EAAA;;;GAC/C;EAED,AAAA,eAEC,CAFoB,MAAe,EAAE,IAAa;mCACO,MAAI,EAAE,IAAE;GACjE;EAED,AAAA,YAEC,CAFwB,IAAa;;mCACgC,IAAE;GACvE;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAnCD;qCAAA;;;;;;;;;;;0GAA+B;KAAA;IAC/B;qCAAA;;;;;;;;;;;0GAA6B;KAAA;IAC7B;qCAAA;;;;;;;;;;;0GAA6B;KAAA;IAC7B;qCAAA;;;;;;;;;;;0GAAoC;KAAA;IACpC;qCAAA;;;;;;;;;;;0GAA2B;KAAA;;;;;;;;EA6B3B,AAAA,SAEC;;;;UAFwB,IAAa;;;;;;;;uCAAb,IAAa;GAErC;;;;"
+}

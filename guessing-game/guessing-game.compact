@@ -37,6 +37,7 @@ export circuit guessNum(n: Uint<16>): Boolean {
 }
 
 circuit localSkOrError(): Bytes<32> {
+    // isn't this exposing the users secret key?
     const maybeSk = disclose(localSk());
     assert(maybeSk.is_some, "No secret key found");
     return maybeSk.value;

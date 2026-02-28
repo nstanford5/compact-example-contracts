@@ -1,0 +1,44 @@
+pragma language_version 0.21;
+import CompactStandardLibrary;
+
+enum State {
+    UNSET,
+    SET
+}
+
+export ledger voter: Bytes<32>;
+export ledger vote1: Counter;
+export ledger vote2: Counter;
+export ledger voteCommit: Bytes<32>;
+export ledger state: State;
+
+constructor(sk: Bytes<32>) {
+    voter = disclose(publicKey(sk));
+    state = State.UNSET;
+}
+
+export circuit onChainVote(inputVote: Uint<8>, sk: Bytes<32>): [] {
+    assert(disclose(publicKey(sk)) == voter, "This is not your ballot");
+    assert(vote1 == 0 && vote2 == 0, "Attempt to double vote");
+    assert(inputVote == 1 || inputVote == 2, "You must vote 1 or 2");
+    voteCommit = commitWithSk(inputVote as Bytes<32>, sk);
+    state = State.SET;
+}
+
+export circuit revealVote(vote: Uint<8>, sk: Bytes<32>): [] {
+    // @TODO assert this is the correct caller
+    assert(state == State.SET, "No vote yet");
+    const voteCheck = commitWithSk(vote as Bytes<32>, sk);
+    // is this best practice?
+    assert(voteCheck == voteCommit, "Attempt to change the vote, reveal blocked");
+    const publicVote = disclose(vote);
+    publicVote == 1 ? vote1.increment(1) : vote2.increment(1);
+}
+
+circuit commitWithSk(vote: Bytes<32>, sk: Bytes<32>): Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([vote, sk]));
+}
+
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "poll:pk:"), sk]);
+}
