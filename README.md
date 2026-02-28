@@ -2,9 +2,7 @@
 
 These contracts are intended for the /examples folders of the docs. All contracts have successful compilation.
 
-:::note
-Active WIP repo, every contract requires SME review!
-:::
+**Active WIP repo -- all contracts require SME review!**
 
 ## @TODO
 1. Battleship
