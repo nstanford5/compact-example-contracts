@@ -5,7 +5,7 @@ export type Witnesses<PS> = {
 
 export type ImpureCircuits<PS> = {
   accept(context: __compactRuntime.CircuitContext<PS>,
-         player1Pk_0: Uint8Array,
+         player1Pk_0: { bytes: Uint8Array },
          sk_0: Uint8Array,
          numberGuess_0: bigint): __compactRuntime.CircuitResults<PS, boolean>;
   onChainSetNum(context: __compactRuntime.CircuitContext<PS>,
@@ -22,7 +22,7 @@ export type PureCircuits = {
 
 export type Circuits<PS> = {
   accept(context: __compactRuntime.CircuitContext<PS>,
-         player1Pk_0: Uint8Array,
+         player1Pk_0: { bytes: Uint8Array },
          sk_0: Uint8Array,
          numberGuess_0: bigint): __compactRuntime.CircuitResults<PS, boolean>;
   onChainSetNum(context: __compactRuntime.CircuitContext<PS>,
@@ -36,7 +36,7 @@ export type Circuits<PS> = {
 
 export type Ledger = {
   readonly state: number;
-  readonly player1: Uint8Array;
+  readonly player1: { bytes: Uint8Array };
   readonly numHash: Uint8Array;
 }
 

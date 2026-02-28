@@ -27,7 +27,7 @@ export type Circuits<PS> = {
 }
 
 export type Ledger = {
-  readonly auctionOrganizer: Uint8Array;
+  readonly auctionOrganizer: { bytes: Uint8Array };
   readonly hiddenPrice: Uint8Array;
   readonly publicPrice: bigint;
   bidders: {

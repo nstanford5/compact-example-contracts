@@ -1,5 +1,8 @@
+/**
+    Guess the number game between 2 players, where player 1 sets a number(hashed)
+    and player 2 has to guess that number
+**/
 pragma language_version 0.21;
-
 import CompactStandardLibrary;
 
 enum State {
@@ -8,18 +11,18 @@ enum State {
 }
 
 export ledger state: State;
-export ledger player1: Bytes<32>;
+export ledger player1: ZswapCoinPublicKey;
 export ledger numHash: Bytes<32>;
 
 constructor(sk: Bytes<32>) {
-    player1 = disclose(publicKey(sk));
+    player1 = ownPublicKey();
     state = State.UNSET;
 }
 
 // called by player2 to accept the challenge of guessing the number
-export circuit accept(player1Pk: Bytes<32>, sk: Bytes<32>, numberGuess: Uint<8>): Boolean {
+export circuit accept(player1Pk: ZswapCoinPublicKey, sk: Bytes<32>, numberGuess: Uint<8>): Boolean {
     assert(state == State.SET, "No player1 present");
-    assert(player1 != publicKey(sk), "You can't play against yourself");
+    assert(player1 != ownPublicKey(), "You can't play against yourself");
     // do I need player2 to pass in player1Pk and verify this?
     assert(player1Pk == player1, "This is the wrong game");
     const result = guessNum(numberGuess, sk);
@@ -27,13 +30,16 @@ export circuit accept(player1Pk: Bytes<32>, sk: Bytes<32>, numberGuess: Uint<8>)
 }
 
 export circuit onChainSetNum(num: Uint<8>, sk: Bytes<32>): [] {
-    assert(player1 == publicKey(sk), "You are not player 1");
+    assert(player1 == ownPublicKey(), "Only player1 can set the number");
     assert(state == State.UNSET, "The number is already set");
+    assert(num >= 1 && num <= 5, "Please pick a number between 1-5");
+    
     numHash = disclose(commitWithSk(num as Bytes<32>, sk));
     state = State.SET;
 }
 
 export circuit guessNum(num: Uint<8>, sk: Bytes<32>): Boolean {
+    assert(ownPublicKey() != player1, "Only player2 can guess the number");
     const guessHash = disclose(commitWithSk(num as Bytes<32>, sk));
     return guessHash == numHash;
 }

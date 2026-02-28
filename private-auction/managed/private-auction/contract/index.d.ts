@@ -27,7 +27,7 @@ export type Circuits<PS> = {
 }
 
 export type Ledger = {
-  readonly auctionOrganizer: Uint8Array;
+  readonly auctionOrganizer: { bytes: Uint8Array };
   readonly highestBid: bigint;
   hashedBids: {
     isEmpty(): boolean;
@@ -37,7 +37,8 @@ export type Ledger = {
     [Symbol.iterator](): Iterator<[Uint8Array, Uint8Array]>
   };
   readonly winner: Uint8Array;
-  readonly state: number;
+  readonly winState: number;
+  readonly bidState: number;
   readonly bidCount: bigint;
 }
 

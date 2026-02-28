@@ -1,6 +1,6 @@
 /**
-     An aution where the bidders and their bids are private. The only public
-     bid is the winning one, and the winner is never disclosed.
+    An aution where the bidders are private. Only bids are public,
+    and the winner is never disclosed.
 **/
 pragma language_version 0.21;
 import CompactStandardLibrary;
@@ -10,33 +10,48 @@ enum Winner {
     SET
 }
 
-export ledger auctionOrganizer: Bytes<32>;
+enum Bids {
+    OPEN,
+    CLOSED
+}
+
+export ledger auctionOrganizer: ZswapCoinPublicKey;
 export ledger highestBid: Uint<8>;
 export ledger hashedBids: Map<Bytes<32>, Bytes<32>>;
 export ledger winner: Bytes<32>;
-export ledger state: Winner;
+export ledger winState: Winner;
+export ledger bidState: Bids;
 export ledger bidCount: Counter;
 
 constructor(sk: Bytes<32>) {
-    auctionOrganizer = disclose(publicKey(sk));
+    auctionOrganizer = ownPublicKey();
     highestBid = 0;
-    state = Winner.UNSET;
+    winState = Winner.UNSET;
+    bidState = Bids.OPEN;
 }
 
+// I suppose the frontend would need to track bidState to determine when to 
+// allow claims
 export circuit makeBid(bidAmount: Uint<8>, sk: Bytes<32>) : [] {
-    assert(bidCount < 9, "Max number of bids reached");
+    assert(bidState == Bids.OPEN, "Sorry, bidding has closed");
+    assert(ownPublicKey() != auctionOrganizer, "Organizer cannot make bids");
+
     const pubKeyHash = disclose(publicKey(sk));
     assert(!hashedBids.member(pubKeyHash), "You can only bid once");
+
     hashedBids.insert(pubKeyHash, commitWithSk(pubKeyHash, bidAmount as Bytes<32>, sk));
     const publicBid = disclose(bidAmount);
     if(publicBid > highestBid) {
         highestBid = publicBid;
     }
     bidCount.increment(1);
+    if(bidCount == 9){
+        bidState = Bids.CLOSED;
+    }
 }
 
 export circuit claim(bidAmount: Uint<8>, sk: Bytes<32>) : Bytes<32> {
-    assert(bidCount == 9, "Bids are not yet complete");
+    assert(bidState == Bids.CLOSED, "Bids are still open");
     const pubKeyHash = disclose(publicKey(sk));
     assert(hashedBids.member(pubKeyHash), "You are not a registered bidder");
 
@@ -45,7 +60,7 @@ export circuit claim(bidAmount: Uint<8>, sk: Bytes<32>) : Bytes<32> {
     
     const winningBidHash = commitWithSk(pubKeyHash, highestBid as Bytes<32>, sk);
     assert(bid == winningBidHash, "Winning bid hash mismatch");
-    state = Winner.SET;
+    winState = Winner.SET;
     return pubKeyHash;
 }
 
@@ -56,4 +71,3 @@ circuit commitWithSk(bidderPk: Bytes<32>, bidAmount: Bytes<32>, sk: Bytes<32>) :
 export circuit publicKey(sk: Bytes<32>): Bytes<32> {
     return persistentHash<Vector<2, Bytes<32>>>([pad(32, "private-auction:pk:"), sk]);
 }
-

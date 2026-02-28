@@ -27,7 +27,7 @@ export type Circuits<PS> = {
 }
 
 export type Ledger = {
-  readonly voter: Uint8Array;
+  readonly voter: { bytes: Uint8Array };
   readonly vote1: bigint;
   readonly vote2: bigint;
   readonly voteCommit: Uint8Array;

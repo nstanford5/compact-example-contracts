@@ -4,15 +4,13 @@ export type Witnesses<PS> = {
 }
 
 export type ImpureCircuits<PS> = {
-  addOrganizer(context: __compactRuntime.CircuitContext<PS>,
-               organizerPk_0: Uint8Array,
-               sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  addOrganizer(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, []>;
   addParticipant(context: __compactRuntime.CircuitContext<PS>,
                  participantPk_0: Uint8Array,
-                 sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+                 OrganizerSk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   checkIn(context: __compactRuntime.CircuitContext<PS>,
           participantPk_0: Uint8Array,
-          sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+          organizerSk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
 }
 
 export type PureCircuits = {
@@ -20,15 +18,13 @@ export type PureCircuits = {
 }
 
 export type Circuits<PS> = {
-  addOrganizer(context: __compactRuntime.CircuitContext<PS>,
-               organizerPk_0: Uint8Array,
-               sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  addOrganizer(context: __compactRuntime.CircuitContext<PS>): __compactRuntime.CircuitResults<PS, []>;
   addParticipant(context: __compactRuntime.CircuitContext<PS>,
                  participantPk_0: Uint8Array,
-                 sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+                 OrganizerSk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   checkIn(context: __compactRuntime.CircuitContext<PS>,
           participantPk_0: Uint8Array,
-          sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+          organizerSk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
   publicKey(context: __compactRuntime.CircuitContext<PS>, sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, Uint8Array>;
 }
 
@@ -36,8 +32,8 @@ export type Ledger = {
   organizerPks: {
     isEmpty(): boolean;
     size(): bigint;
-    member(elem_0: Uint8Array): boolean;
-    [Symbol.iterator](): Iterator<Uint8Array>
+    member(elem_0: { bytes: Uint8Array }): boolean;
+    [Symbol.iterator](): Iterator<{ bytes: Uint8Array }>
   };
   hashedPartyGoers: {
     isEmpty(): boolean;
@@ -62,8 +58,7 @@ export declare class Contract<PS = any, W extends Witnesses<PS> = Witnesses<PS>>
   circuits: Circuits<PS>;
   impureCircuits: ImpureCircuits<PS>;
   constructor(witnesses: W);
-  initialState(context: __compactRuntime.ConstructorContext<PS>,
-               sk_0: Uint8Array): __compactRuntime.ConstructorResult<PS>;
+  initialState(context: __compactRuntime.ConstructorContext<PS>): __compactRuntime.ConstructorResult<PS>;
 }
 
 export declare function ledger(state: __compactRuntime.StateValue | __compactRuntime.ChargedState): Ledger;

@@ -6,19 +6,19 @@ enum State {
     SET
 }
 
-export ledger voter: Bytes<32>;
+export ledger voter: ZswapCoinPublicKey;
 export ledger vote1: Counter;
 export ledger vote2: Counter;
 export ledger voteCommit: Bytes<32>;
 export ledger state: State;
 
 constructor(sk: Bytes<32>) {
-    voter = disclose(publicKey(sk));
+    voter = ownPublicKey();
     state = State.UNSET;
 }
 
 export circuit onChainVote(inputVote: Uint<8>, sk: Bytes<32>): [] {
-    assert(disclose(publicKey(sk)) == voter, "This is not your ballot");
+    assert(ownPublicKey() == voter, "This is not your ballot");
     assert(vote1 == 0 && vote2 == 0, "Attempt to double vote");
     assert(inputVote == 1 || inputVote == 2, "You must vote 1 or 2");
     voteCommit = commitWithSk(inputVote as Bytes<32>, sk);

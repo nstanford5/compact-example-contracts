@@ -4,30 +4,34 @@ pragma language_version 0.21;
 import CompactStandardLibrary;
 
 // organizers are public
-export ledger organizerPks: Set<Bytes<32>>;
+export ledger organizerPks: Set<ZswapCoinPublicKey>;
 // participants are hashed until they arrive
 export ledger hashedPartyGoers: Set<Bytes<32>>;
 export ledger checkedInParty: Set<Bytes<32>>;
 
 // maybe add initial list of participants?
-constructor(sk: Bytes<32>){
-    organizerPks.insert(disclose(publicKey(sk)));
+constructor(){
+    organizerPks.insert(ownPublicKey());
 }
 
-export circuit addOrganizer(organizerPk: Bytes<32>, sk: Bytes<32>): [] {
-    assert(organizerPks.member(disclose(publicKey(sk))), "You are not an organizer");
-    assert(!organizerPks.member(disclose(organizerPk)), "You are already in the list");
-    organizerPks.insert(disclose(organizerPk));
+export circuit addOrganizer(): [] {
+    const organizerPk = ownPublicKey();
+    assert(organizerPks.member(organizerPk), "You are not an organizer");
+    assert(!organizerPks.member(organizerPk), "You are already in the organizer list");
+    
+    organizerPks.insert(organizerPk);
 }
 
+// to be called by Organizer
 export circuit addParticipant(participantPk: Bytes<32>, OrganizerSk: Bytes<32>): [] {
-    assert(organizerPks.member(disclose(publicKey(OrganizerSk))), "You are not an organizer");
-    hashedPartyGoers.insert(disclose(commitWithSk(participantPk, sk)));
+    assert(organizerPks.member(ownPublicKey()), "You are not an organizer");
+    hashedPartyGoers.insert(disclose(commitWithSk(participantPk, OrganizerSk)));
 }
 
-export circuit checkIn(participantPk: Bytes<32>, sk: Bytes<32>): [] {
-    assert(organizerPks.member(disclose(publicKey(sk))), "You are not an organizer");
-    assert(hashedPartyGoers.member(commitWithSk(participantPk, sk)), "You are not on the list");
+export circuit checkIn(participantPk: Bytes<32>, organizerSk: Bytes<32>): [] {
+    assert(organizerPks.member(ownPublicKey()), "You are not an organizer");
+
+    assert(hashedPartyGoers.member(commitWithSk(participantPk, organizerSk)), "You are not on the list");
     checkedInParty.insert(disclose(participantPk));
 }
 

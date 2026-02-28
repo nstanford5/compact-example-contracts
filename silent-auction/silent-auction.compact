@@ -6,7 +6,7 @@
 pragma language_version 0.21;
 import CompactStandardLibrary;
 
-export ledger auctionOrganizer: Bytes<32>;
+export ledger auctionOrganizer: ZswapCoinPublicKey;
 export ledger hiddenPrice: Bytes<32>;
 export ledger publicPrice: Uint<8>;
 export ledger bidders: Map<Bytes<32>, Uint<8>>;
@@ -14,7 +14,7 @@ export ledger bidCount: Counter;
 export ledger highestBid: Uint<8>;
 
 constructor(sk: Bytes<32>, minPrice: Uint<8>) {
-    auctionOrganizer = disclose(publicKey(sk));
+    auctionOrganizer = ownPublicKey();
     hiddenPrice = commitWithSk(minPrice as Bytes<32>, sk);
     highestBid = 0;
 }
@@ -34,11 +34,15 @@ export circuit bid(pk: Bytes<32>, bidAmount: Uint<8>): [] {
 }
 
 export circuit revealWin(minPrice: Uint<8>, sk: Bytes<32>): Uint<8> {
-    assert(auctionOrganizer == disclose(publicKey(sk)), "You are not the auction organizer");
+    assert(auctionOrganizer == ownPublicKey(), "You are not the auction organizer");
     assert(bidCount == 9, "Bidding is not complete until 9 bids have been received");
     assert(commitWithSk(minPrice as Bytes<32>, sk) == hiddenPrice, "Attempt to change min price detected, shame on you.");
+    
     // all votes are in, public price can be revealed
     publicPrice = disclose(minPrice);
+
+    // if the publicPrice is not met, the highestBid doesn't matter
+    assert(highestBid > publicPrice, "Minimum bid amount not met");
     return highestBid;
 }
 

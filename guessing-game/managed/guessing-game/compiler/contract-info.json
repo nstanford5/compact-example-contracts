@@ -11,8 +11,17 @@
         {
           "name": "player1Pk",
           "type": {
-            "type-name": "Bytes",
-            "length": 32
+            "type-name": "Struct",
+            "name": "ZswapCoinPublicKey",
+            "elements": [
+              {
+                "name": "bytes",
+                "type": {
+                  "type-name": "Bytes",
+                  "length": 32
+                }
+              }
+            ]
           }
         },
         {

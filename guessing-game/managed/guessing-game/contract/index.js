@@ -3,15 +3,31 @@ __compactRuntime.checkRuntimeVersion('0.14.0');
 
 const _descriptor_0 = new __compactRuntime.CompactTypeBytes(32);
 
-const _descriptor_1 = new __compactRuntime.CompactTypeEnum(1, 1);
+class _ZswapCoinPublicKey_0 {
+  alignment() {
+    return _descriptor_0.alignment();
+  }
+  fromValue(value_0) {
+    return {
+      bytes: _descriptor_0.fromValue(value_0)
+    }
+  }
+  toValue(value_0) {
+    return _descriptor_0.toValue(value_0.bytes);
+  }
+}
+
+const _descriptor_1 = new _ZswapCoinPublicKey_0();
 
 const _descriptor_2 = new __compactRuntime.CompactTypeUnsignedInteger(255n, 1);
 
 const _descriptor_3 = __compactRuntime.CompactTypeBoolean;
 
-const _descriptor_4 = new __compactRuntime.CompactTypeVector(2, _descriptor_0);
+const _descriptor_4 = new __compactRuntime.CompactTypeEnum(1, 1);
 
-const _descriptor_5 = new __compactRuntime.CompactTypeUnsignedInteger(18446744073709551615n, 8);
+const _descriptor_5 = new __compactRuntime.CompactTypeVector(2, _descriptor_0);
+
+const _descriptor_6 = new __compactRuntime.CompactTypeUnsignedInteger(18446744073709551615n, 8);
 
 class _Either_0 {
   alignment() {
@@ -29,9 +45,9 @@ class _Either_0 {
   }
 }
 
-const _descriptor_6 = new _Either_0();
+const _descriptor_7 = new _Either_0();
 
-const _descriptor_7 = new __compactRuntime.CompactTypeUnsignedInteger(340282366920938463463374607431768211455n, 16);
+const _descriptor_8 = new __compactRuntime.CompactTypeUnsignedInteger(340282366920938463463374607431768211455n, 16);
 
 class _ContractAddress_0 {
   alignment() {
@@ -47,7 +63,7 @@ class _ContractAddress_0 {
   }
 }
 
-const _descriptor_8 = new _ContractAddress_0();
+const _descriptor_9 = new _ContractAddress_0();
 
 export class Contract {
   witnesses;
@@ -72,36 +88,36 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('accept',
                                      'argument 1 (as invoked from Typescript)',
-                                     'guessing-game.compact line 20 char 1',
+                                     'guessing-game.compact line 23 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
-        if (!(player1Pk_0.buffer instanceof ArrayBuffer && player1Pk_0.BYTES_PER_ELEMENT === 1 && player1Pk_0.length === 32)) {
+        if (!(typeof(player1Pk_0) === 'object' && player1Pk_0.bytes.buffer instanceof ArrayBuffer && player1Pk_0.bytes.BYTES_PER_ELEMENT === 1 && player1Pk_0.bytes.length === 32)) {
           __compactRuntime.typeError('accept',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'guessing-game.compact line 20 char 1',
-                                     'Bytes<32>',
+                                     'guessing-game.compact line 23 char 1',
+                                     'struct ZswapCoinPublicKey<bytes: Bytes<32>>',
                                      player1Pk_0)
         }
         if (!(sk_0.buffer instanceof ArrayBuffer && sk_0.BYTES_PER_ELEMENT === 1 && sk_0.length === 32)) {
           __compactRuntime.typeError('accept',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'guessing-game.compact line 20 char 1',
+                                     'guessing-game.compact line 23 char 1',
                                      'Bytes<32>',
                                      sk_0)
         }
         if (!(typeof(numberGuess_0) === 'bigint' && numberGuess_0 >= 0n && numberGuess_0 <= 255n)) {
           __compactRuntime.typeError('accept',
                                      'argument 3 (argument 4 as invoked from Typescript)',
-                                     'guessing-game.compact line 20 char 1',
+                                     'guessing-game.compact line 23 char 1',
                                      'Uint<0..256>',
                                      numberGuess_0)
         }
         const context = { ...contextOrig_0, gasCost: __compactRuntime.emptyRunningCost() };
         const partialProofData = {
           input: {
-            value: _descriptor_0.toValue(player1Pk_0).concat(_descriptor_0.toValue(sk_0).concat(_descriptor_2.toValue(numberGuess_0))),
-            alignment: _descriptor_0.alignment().concat(_descriptor_0.alignment().concat(_descriptor_2.alignment()))
+            value: _descriptor_1.toValue(player1Pk_0).concat(_descriptor_0.toValue(sk_0).concat(_descriptor_2.toValue(numberGuess_0))),
+            alignment: _descriptor_1.alignment().concat(_descriptor_0.alignment().concat(_descriptor_2.alignment()))
           },
           output: undefined,
           publicTranscript: [],
@@ -125,21 +141,21 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('onChainSetNum',
                                      'argument 1 (as invoked from Typescript)',
-                                     'guessing-game.compact line 29 char 1',
+                                     'guessing-game.compact line 32 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(typeof(num_0) === 'bigint' && num_0 >= 0n && num_0 <= 255n)) {
           __compactRuntime.typeError('onChainSetNum',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'guessing-game.compact line 29 char 1',
+                                     'guessing-game.compact line 32 char 1',
                                      'Uint<0..256>',
                                      num_0)
         }
         if (!(sk_0.buffer instanceof ArrayBuffer && sk_0.BYTES_PER_ELEMENT === 1 && sk_0.length === 32)) {
           __compactRuntime.typeError('onChainSetNum',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'guessing-game.compact line 29 char 1',
+                                     'guessing-game.compact line 32 char 1',
                                      'Bytes<32>',
                                      sk_0)
         }
@@ -170,21 +186,21 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('guessNum',
                                      'argument 1 (as invoked from Typescript)',
-                                     'guessing-game.compact line 36 char 1',
+                                     'guessing-game.compact line 41 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(typeof(num_0) === 'bigint' && num_0 >= 0n && num_0 <= 255n)) {
           __compactRuntime.typeError('guessNum',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'guessing-game.compact line 36 char 1',
+                                     'guessing-game.compact line 41 char 1',
                                      'Uint<0..256>',
                                      num_0)
         }
         if (!(sk_0.buffer instanceof ArrayBuffer && sk_0.BYTES_PER_ELEMENT === 1 && sk_0.length === 32)) {
           __compactRuntime.typeError('guessNum',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'guessing-game.compact line 36 char 1',
+                                     'guessing-game.compact line 41 char 1',
                                      'Bytes<32>',
                                      sk_0)
         }
@@ -230,7 +246,7 @@ export class Contract {
     if (!(sk_0.buffer instanceof ArrayBuffer && sk_0.BYTES_PER_ELEMENT === 1 && sk_0.length === 32)) {
       __compactRuntime.typeError('Contract state constructor',
                                  'argument 1 (argument 2 as invoked from Typescript)',
-                                 'guessing-game.compact line 14 char 1',
+                                 'guessing-game.compact line 17 char 1',
                                  'Bytes<32>',
                                  sk_0)
     }
@@ -257,8 +273,8 @@ export class Contract {
                                                  value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(0n),
                                                                                               alignment: _descriptor_2.alignment() }).encode() } },
                                        { push: { storage: true,
-                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_1.toValue(0),
-                                                                                              alignment: _descriptor_1.alignment() }).encode() } },
+                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_4.toValue(0),
+                                                                                              alignment: _descriptor_4.alignment() }).encode() } },
                                        { ins: { cached: false, n: 1 } }]);
     __compactRuntime.queryLedgerState(context,
                                       partialProofData,
@@ -267,8 +283,8 @@ export class Contract {
                                                  value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(1n),
                                                                                               alignment: _descriptor_2.alignment() }).encode() } },
                                        { push: { storage: true,
-                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(new Uint8Array(32)),
-                                                                                              alignment: _descriptor_0.alignment() }).encode() } },
+                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_1.toValue({ bytes: new Uint8Array(32) }),
+                                                                                              alignment: _descriptor_1.alignment() }).encode() } },
                                        { ins: { cached: false, n: 1 } }]);
     __compactRuntime.queryLedgerState(context,
                                       partialProofData,
@@ -280,7 +296,7 @@ export class Contract {
                                                  value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(new Uint8Array(32)),
                                                                                               alignment: _descriptor_0.alignment() }).encode() } },
                                        { ins: { cached: false, n: 1 } }]);
-    const tmp_0 = this._publicKey_0(sk_0);
+    const tmp_0 = this._ownPublicKey_0(context, partialProofData);
     __compactRuntime.queryLedgerState(context,
                                       partialProofData,
                                       [
@@ -288,8 +304,8 @@ export class Contract {
                                                  value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(1n),
                                                                                               alignment: _descriptor_2.alignment() }).encode() } },
                                        { push: { storage: true,
-                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(tmp_0),
-                                                                                              alignment: _descriptor_0.alignment() }).encode() } },
+                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_1.toValue(tmp_0),
+                                                                                              alignment: _descriptor_1.alignment() }).encode() } },
                                        { ins: { cached: false, n: 1 } }]);
     __compactRuntime.queryLedgerState(context,
                                       partialProofData,
@@ -298,8 +314,8 @@ export class Contract {
                                                  value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(0n),
                                                                                               alignment: _descriptor_2.alignment() }).encode() } },
                                        { push: { storage: true,
-                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_1.toValue(0),
-                                                                                              alignment: _descriptor_1.alignment() }).encode() } },
+                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_4.toValue(0),
+                                                                                              alignment: _descriptor_4.alignment() }).encode() } },
                                        { ins: { cached: false, n: 1 } }]);
     state_0.data = new __compactRuntime.ChargedState(context.currentQueryContext.state.state);
     return {
@@ -309,11 +325,19 @@ export class Contract {
     }
   }
   _persistentHash_0(value_0) {
-    const result_0 = __compactRuntime.persistentHash(_descriptor_4, value_0);
+    const result_0 = __compactRuntime.persistentHash(_descriptor_5, value_0);
+    return result_0;
+  }
+  _ownPublicKey_0(context, partialProofData) {
+    const result_0 = __compactRuntime.ownPublicKey(context);
+    partialProofData.privateTranscriptOutputs.push({
+      value: _descriptor_1.toValue(result_0),
+      alignment: _descriptor_1.alignment()
+    });
     return result_0;
   }
   _accept_0(context, partialProofData, player1Pk_0, sk_0, numberGuess_0) {
-    __compactRuntime.assert(_descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
+    __compactRuntime.assert(_descriptor_4.fromValue(__compactRuntime.queryLedgerState(context,
                                                                                       partialProofData,
                                                                                       [
                                                                                        { dup: { n: 0 } },
@@ -328,7 +352,7 @@ export class Contract {
                             ===
                             1,
                             'No player1 present');
-    __compactRuntime.assert(!this._equal_0(_descriptor_0.fromValue(__compactRuntime.queryLedgerState(context,
+    __compactRuntime.assert(!this._equal_0(_descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
                                                                                                      partialProofData,
                                                                                                      [
                                                                                                       { dup: { n: 0 } },
@@ -340,10 +364,11 @@ export class Contract {
                                                                                                                                  alignment: _descriptor_2.alignment() } }] } },
                                                                                                       { popeq: { cached: false,
                                                                                                                  result: undefined } }]).value),
-                                           this._publicKey_0(sk_0)),
+                                           this._ownPublicKey_0(context,
+                                                                partialProofData)),
                             "You can't play against yourself");
     __compactRuntime.assert(this._equal_1(player1Pk_0,
-                                          _descriptor_0.fromValue(__compactRuntime.queryLedgerState(context,
+                                          _descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
                                                                                                     partialProofData,
                                                                                                     [
                                                                                                      { dup: { n: 0 } },
@@ -363,7 +388,7 @@ export class Contract {
     return result_0;
   }
   _onChainSetNum_0(context, partialProofData, num_0, sk_0) {
-    __compactRuntime.assert(this._equal_2(_descriptor_0.fromValue(__compactRuntime.queryLedgerState(context,
+    __compactRuntime.assert(this._equal_2(_descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
                                                                                                     partialProofData,
                                                                                                     [
                                                                                                      { dup: { n: 0 } },
@@ -375,9 +400,10 @@ export class Contract {
                                                                                                                                 alignment: _descriptor_2.alignment() } }] } },
                                                                                                      { popeq: { cached: false,
                                                                                                                 result: undefined } }]).value),
-                                          this._publicKey_0(sk_0)),
-                            'You are not player 1');
-    __compactRuntime.assert(_descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
+                                          this._ownPublicKey_0(context,
+                                                               partialProofData)),
+                            'Only player1 can set the number');
+    __compactRuntime.assert(_descriptor_4.fromValue(__compactRuntime.queryLedgerState(context,
                                                                                       partialProofData,
                                                                                       [
                                                                                        { dup: { n: 0 } },
@@ -392,9 +418,11 @@ export class Contract {
                             ===
                             0,
                             'The number is already set');
+    __compactRuntime.assert(num_0 >= 1n && num_0 <= 5n,
+                            'Please pick a number between 1-5');
     const tmp_0 = this._commitWithSk_0(__compactRuntime.convertFieldToBytes(32,
                                                                             num_0,
-                                                                            'guessing-game.compact line 32 char 37'),
+                                                                            'guessing-game.compact line 37 char 37'),
                                        sk_0);
     __compactRuntime.queryLedgerState(context,
                                       partialProofData,
@@ -413,17 +441,32 @@ export class Contract {
                                                  value: __compactRuntime.StateValue.newCell({ value: _descriptor_2.toValue(0n),
                                                                                               alignment: _descriptor_2.alignment() }).encode() } },
                                        { push: { storage: true,
-                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_1.toValue(1),
-                                                                                              alignment: _descriptor_1.alignment() }).encode() } },
+                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_4.toValue(1),
+                                                                                              alignment: _descriptor_4.alignment() }).encode() } },
                                        { ins: { cached: false, n: 1 } }]);
     return [];
   }
   _guessNum_0(context, partialProofData, num_0, sk_0) {
+    __compactRuntime.assert(!this._equal_3(this._ownPublicKey_0(context,
+                                                                partialProofData),
+                                           _descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
+                                                                                                     partialProofData,
+                                                                                                     [
+                                                                                                      { dup: { n: 0 } },
+                                                                                                      { idx: { cached: false,
+                                                                                                               pushPath: false,
+                                                                                                               path: [
+                                                                                                                      { tag: 'value',
+                                                                                                                        value: { value: _descriptor_2.toValue(1n),
+                                                                                                                                 alignment: _descriptor_2.alignment() } }] } },
+                                                                                                      { popeq: { cached: false,
+                                                                                                                 result: undefined } }]).value)),
+                            'Only player2 can guess the number');
     const guessHash_0 = this._commitWithSk_0(__compactRuntime.convertFieldToBytes(32,
                                                                                   num_0,
-                                                                                  'guessing-game.compact line 37 char 45'),
+                                                                                  'guessing-game.compact line 43 char 45'),
                                              sk_0);
-    return this._equal_3(guessHash_0,
+    return this._equal_4(guessHash_0,
                          _descriptor_0.fromValue(__compactRuntime.queryLedgerState(context,
                                                                                    partialProofData,
                                                                                    [
@@ -443,18 +486,38 @@ export class Contract {
                                    sk_0]);
   }
   _equal_0(x0, y0) {
-    if (!x0.every((x, i) => y0[i] === x)) { return false; }
+    {
+      let x1 = x0.bytes;
+      let y1 = y0.bytes;
+      if (!x1.every((x, i) => y1[i] === x)) { return false; }
+    }
     return true;
   }
   _equal_1(x0, y0) {
-    if (!x0.every((x, i) => y0[i] === x)) { return false; }
+    {
+      let x1 = x0.bytes;
+      let y1 = y0.bytes;
+      if (!x1.every((x, i) => y1[i] === x)) { return false; }
+    }
     return true;
   }
   _equal_2(x0, y0) {
-    if (!x0.every((x, i) => y0[i] === x)) { return false; }
+    {
+      let x1 = x0.bytes;
+      let y1 = y0.bytes;
+      if (!x1.every((x, i) => y1[i] === x)) { return false; }
+    }
     return true;
   }
   _equal_3(x0, y0) {
+    {
+      let x1 = x0.bytes;
+      let y1 = y0.bytes;
+      if (!x1.every((x, i) => y1[i] === x)) { return false; }
+    }
+    return true;
+  }
+  _equal_4(x0, y0) {
     if (!x0.every((x, i) => y0[i] === x)) { return false; }
     return true;
   }
@@ -474,7 +537,7 @@ export function ledger(stateOrChargedState) {
   };
   return {
     get state() {
-      return _descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
+      return _descriptor_4.fromValue(__compactRuntime.queryLedgerState(context,
                                                                        partialProofData,
                                                                        [
                                                                         { dup: { n: 0 } },
@@ -488,7 +551,7 @@ export function ledger(stateOrChargedState) {
                                                                                    result: undefined } }]).value);
     },
     get player1() {
-      return _descriptor_0.fromValue(__compactRuntime.queryLedgerState(context,
+      return _descriptor_1.fromValue(__compactRuntime.queryLedgerState(context,
                                                                        partialProofData,
                                                                        [
                                                                         { dup: { n: 0 } },
@@ -530,7 +593,7 @@ export const pureCircuits = {
     if (!(sk_0.buffer instanceof ArrayBuffer && sk_0.BYTES_PER_ELEMENT === 1 && sk_0.length === 32)) {
       __compactRuntime.typeError('publicKey',
                                  'argument 1',
-                                 'guessing-game.compact line 45 char 1',
+                                 'guessing-game.compact line 51 char 1',
                                  'Bytes<32>',
                                  sk_0)
     }

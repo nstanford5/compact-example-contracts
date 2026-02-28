@@ -8,20 +8,6 @@
       "pure": false,
       "proof": true,
       "arguments": [
-        {
-          "name": "organizerPk",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        },
-        {
-          "name": "sk",
-          "type": {
-            "type-name": "Bytes",
-            "length": 32
-          }
-        }
       ],
       "result-type": {
         "type-name": "Tuple",
@@ -42,7 +28,7 @@
           }
         },
         {
-          "name": "sk",
+          "name": "OrganizerSk",
           "type": {
             "type-name": "Bytes",
             "length": 32
@@ -68,7 +54,7 @@
           }
         },
         {
-          "name": "sk",
+          "name": "organizerSk",
           "type": {
             "type-name": "Bytes",
             "length": 32
