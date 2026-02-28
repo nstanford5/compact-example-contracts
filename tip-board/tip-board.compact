@@ -48,6 +48,7 @@ export circuit revealWinner(winningNum: Uint<8>, sk: Bytes<32>) : [] {
 // @TODO -- send tokens to winner
 export circuit claimWin() : [] {
     const pubKey = ownPublicKey();
+    assert(assignedTicketHolders.member(pubKey), "You are not an assigned ticket holder");
     assert(assignedTicketHolders.lookup(pubKey) == publicWinningNum, "You do not have the winning number");
     winner = pubKey;
 }
