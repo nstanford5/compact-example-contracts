@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../",
+  "sources": ["guessing-game.compact", "compiler/standard-library.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAYA;;;;;;;;;;;;;;;;;;;MAOA,AAAA,MAGC;;;;;;;;;;;;;;;;;;;;;;OAAA;MAED,AAAA,aAIC;;;;;cAJ4B,GAAW;;;;;;;;;;;;;;;;;;yCAAX,GAAW;;;;;;;0EAAX,GAAW;;;OAIvC;MAED,AAAA,QAMC;;;;;cANuB,GAAW;;;;;;;;;;;;;;;;;;yCAAX,GAAW;;;;;;;qEAAX,GAAW;;;OAMlC;MAQD,AAAA,SAEC;;OAAA;;;;;;;GA7BA;EALD;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IARA;;;;;;;;;yEAAiC;IACjC;;;;;;;;;yEAAiC;IACjC;;;;;;;;;yEAAkC;UAQ9B,KAAO;;IAAP;;;;;;;2HAAA,KAAO;;yEAAA;;;;;;;;GAGV;ECjBD,AAAA,kBAAA;oEAAA;;;EDQA,AAAA,UAAoC;;0DAApC,OAAoC;;;;;;;;;;;;;;GAAA;EACpC,AAAA,SAAgC,4BAAjB,GAAW;;0DAA1B,MAAgC;iEAAjB,GAAW;;;;;;;;;;;;;;GAAM;EAChC,AAAA,SAA2B;;0DAA3B,MAA2B;;;;;;;;;;;;;;GAAA;EAS3B,AAAA,SAGC;UAFG,KAAO;;IAAP;;;;;;;2HAAA,KAAO;;yEAAA;mEACA;;;;;;;;;;;wIAAO;mEAAI;;;;;;;;;;;wIAAO;;;GAC5B;EAED,AAAA,gBAIC,4BAJ4B,GAAW;kEAC7B;;;;;;;;;;;uIAAO;;;;;;;;8CAEP,GAAC;;GACX;EAED,AAAA,WAMC,4BANuB,GAAW;2CACxB,GAAC;;UAER,KAAS;IAAT;;;;;;;2HAAA,KAAS;;yEAAA;UACH,SAA0B,yCAAf;;;;;;;;;;;iIAAS;oCAAI,GAAC;WACxB,SAAO;GACjB;EAED,AAAA,iBAIC;UAHS,SAA6B;4BAC5B,SAAO;WACP,SAAO;GACjB;EAED,AAAA,YAEC,CAFwB,IAAa;;mCACyC,IAAE;GAChF;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IA1CD;qCAAA;;;;;;;;;;;0GAAiC;KAAA;IACjC;qCAAA;;;;;;;;;;;0GAAiC;KAAA;IACjC;qCAAA;;;;;;;;;;;0GAAkC;KAAA;;;;;;;;;;;;EAsClC,AAAA,SAEC;;;;UAFwB,IAAa;;;;;;;;uCAAb,IAAa;GAErC;;;;"
+}

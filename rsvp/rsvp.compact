@@ -1,0 +1,43 @@
+// rename to private-guest-list?
+pragma language_version 0.21;
+
+import CompactStandardLibrary;
+
+export ledger organizerPks: Set<Bytes<32>>;
+export ledger checkedInParticipants: Set<Opaque<"string">>;
+
+witness localSk(): Maybe<Bytes<32>>;
+witness getParticipant(participant: Opaque<"string">): Boolean;
+witness setParticipant(participant: Opaque<"string">): [];
+
+constructor(){
+    // organizer is the contract deployer
+    organizerPks.insert(publicKey(localSkOrError()));
+}
+
+circuit localSkOrError(): Bytes<32> {
+    const maybeSk = disclose(localSk());
+    assert (maybeSk.is_some, "No secret key found");
+    return maybeSk.value;
+}
+
+export circuit addOrganizer(organizerPk: Bytes<32>): [] {
+    assert(organizerPks.member(publicKey(localSkOrError())), "You are not an organizer");
+    organizerPks.insert(disclose(organizerPk));
+}
+
+export circuit addParticipant(participant: Opaque<"string">): [] {
+    assert(organizerPks.member(publicKey(localSkOrError())), "You are not an organizer");
+    assert(!getParticipant(participant), "Already in the list");
+    setParticipant(participant);
+}
+
+export circuit checkIn(participant: Opaque<"string">): [] {
+    const eligible = getParticipant(participant);
+    assert(eligible, "Sorry, you are not on the list");
+    checkedInParticipants.insert(disclose(participant));
+}
+
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "welcome:pk:"), sk]);
+}

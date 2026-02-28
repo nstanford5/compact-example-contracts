@@ -1,0 +1,47 @@
+pragma language_version 0.21;
+
+import CompactStandardLibrary;
+
+export ledger player1: Bytes<32>;
+export ledger player2: Bytes<32>;
+export ledger publicNum: Uint<16>;
+
+witness localSk(): Maybe<Bytes<32>>;
+witness setNum(x: Uint<16>): [];
+witness getNum(): Uint<16>;
+
+constructor() {
+    // player1 initiates the contract
+    player1 = publicKey(localSkOrError());
+    // Value defaults to zero, indicating no number has been set
+    setNum(0);
+}
+
+export circuit accept(): [] {
+    player2 = publicKey(localSkOrError());
+    assert(player1 != player2, "You can't play against yourself");
+}
+
+export circuit onChainSetNum(n: Uint<16>): [] {
+    assert(player1 == publicKey(localSkOrError()), "Only player1 can set the number");
+    assert(getNum() == 0, "The number has already been set and cannot be changed");
+    setNum(n);
+}
+
+export circuit guessNum(n: Uint<16>): Boolean {
+    assert(n != 0, "The number has not been set");
+    // the number to be guessed can be made public now
+    publicNum = disclose(getNum());
+    const correct = (publicNum == n);
+    return correct;
+}
+
+circuit localSkOrError(): Bytes<32> {
+    const maybeSk = disclose(localSk());
+    assert(maybeSk.is_some, "No secret key found");
+    return maybeSk.value;
+}
+
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "guessing-game:pk:"), sk]);
+}

@@ -1,0 +1,8 @@
+{
+  "version": 3,
+  "file": "index.js",
+  "sourceRoot": "../../../../",
+  "sources": ["calculator/calculator.compact"],
+  "names": [],
+  "mappings": ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;EAAA;;;;;;;;;;MAIA,AAAA,GAEC;;;;;cAFkB,MAAc;cAAE,MAAc;;;;;;;;;;;;;;;;;;;;;;;;;yCAA9B,MAAc,+BAAE,MAAc;;;;;;;gEAA9B,MAAc,EAAE,MAAc;;;OAEhD;MAED,AAAA,QAEC;;;;;cAFuB,MAAc;cAAE,MAAc;;;;;;;;;;;;;;;;;;;;;;;;;yCAA9B,MAAc,+BAAE,MAAc;;;;;;;;;0CAA9B,MAAc;0CAAE,MAAc;;;OAErD;MAED,AAAA,QAEC;;;;;cAFuB,MAAc;cAAE,MAAc;;;;;;;;;;;;;;;;;;;;;;;;;yCAA9B,MAAc,+BAAE,MAAc;;;;;;;;;0CAA9B,MAAc;0CAAE,MAAc;;;OAErD;MAED,AAAA,MAEC;;;;;cAFqB,MAAc;;;;;;;;;;;;;;;;;;yCAAd,MAAc;;;;;;;mEAAd,MAAc;;;OAEnC;;;;;;;;GAUC;EA5BF;;;;;;;;;;;;;;;;;;;;;;;;;;;;;IAEA;;;;;;;;;yEAA+B;;;;;;;GA0B7B;EAxBF,AAAA,MAEC,4BAFkB,MAAc,EAAE,MAAc;UAC7C,KAAM;;;;;qBAAY,MAAI,GAAG,MAAI;IAA7B;;;;;;;2HAAA,KAAM;;yEAAA;;GACT;EAED,AAAA,WAEC,4BAFuB,MAAc,EAAE,MAAc;UAClD,KAAM,4BAAY,MAAI,IAAG,MAAI;;mBAAX,MAAI,GAAG,MAAI;IAA7B;;;;;;;2HAAA,KAAM;;yEAAA;;GACT;EAED,AAAA,WAEC,4BAFuB,MAAc,EAAE,MAAc;UAClD,KAAM;;;;;qBAAY,MAAI,GAAG,MAAI;IAA7B;;;;;;;2HAAA,KAAM;;yEAAA;;GACT;EAED,AAAA,SAEC,4BAFqB,MAAc;UAChC,KAAM;;;;;qBAAY,MAAI,GAAG,MAAI;IAA7B;;;;;;;2HAAA,KAAM;;yEAAA;;GACT;;;;;;;;;;;;;;;;IAhBD;qCAAA;;;;;;;;;;;0GAA+B;KAAA;;;;;;;;;;"
+}
