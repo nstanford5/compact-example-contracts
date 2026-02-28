@@ -8,11 +8,30 @@
       "pure": false,
       "proof": true,
       "arguments": [
+        {
+          "name": "player1Pk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
+          }
+        },
+        {
+          "name": "numberGuess",
+          "type": {
+            "type-name": "Uint",
+            "maxval": 255
+          }
+        }
       ],
       "result-type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
+        "type-name": "Boolean"
       }
     },
     {
@@ -21,10 +40,17 @@
       "proof": true,
       "arguments": [
         {
-          "name": "n",
+          "name": "num",
           "type": {
             "type-name": "Uint",
-            "maxval": 65535
+            "maxval": 255
+          }
+        },
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
           }
         }
       ],
@@ -40,10 +66,17 @@
       "proof": true,
       "arguments": [
         {
-          "name": "n",
+          "name": "num",
           "type": {
             "type-name": "Uint",
-            "maxval": 65535
+            "maxval": 255
+          }
+        },
+        {
+          "name": "sk",
+          "type": {
+            "type-name": "Bytes",
+            "length": 32
           }
         }
       ],
@@ -71,56 +104,6 @@
     }
   ],
   "witnesses": [
-    {
-      "name": "localSk",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Struct",
-        "name": "Maybe",
-        "elements": [
-          {
-            "name": "is_some",
-            "type": {
-              "type-name": "Boolean"
-            }
-          },
-          {
-            "name": "value",
-            "type": {
-              "type-name": "Bytes",
-              "length": 32
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "setNum",
-      "arguments": [
-        {
-          "name": "x",
-          "type": {
-            "type-name": "Uint",
-            "maxval": 65535
-          }
-        }
-      ],
-      "result type": {
-        "type-name": "Tuple",
-        "types": [
-        ]
-      }
-    },
-    {
-      "name": "getNum",
-      "arguments": [
-      ],
-      "result type": {
-        "type-name": "Uint",
-        "maxval": 65535
-      }
-    }
   ],
   "contracts": [
   ]

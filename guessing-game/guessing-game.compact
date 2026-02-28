@@ -2,45 +2,44 @@ pragma language_version 0.21;
 
 import CompactStandardLibrary;
 
+enum State {
+    UNSET,
+    SET
+}
+
+export ledger state: State;
 export ledger player1: Bytes<32>;
-export ledger player2: Bytes<32>;
-export ledger publicNum: Uint<16>;
+export ledger numHash: Bytes<32>;
 
-witness localSk(): Maybe<Bytes<32>>;
-witness setNum(x: Uint<16>): [];
-witness getNum(): Uint<16>;
-
-constructor() {
-    // player1 initiates the contract
-    player1 = publicKey(localSkOrError());
-    // Value defaults to zero, indicating no number has been set
-    setNum(0);
+constructor(sk: Bytes<32>) {
+    player1 = disclose(publicKey(sk));
+    state = State.UNSET;
 }
 
-export circuit accept(): [] {
-    player2 = publicKey(localSkOrError());
-    assert(player1 != player2, "You can't play against yourself");
+// called by player2 to accept the challenge of guessing the number
+export circuit accept(player1Pk: Bytes<32>, sk: Bytes<32>, numberGuess: Uint<8>): Boolean {
+    assert(state == State.SET, "No player1 present");
+    assert(player1 != publicKey(sk), "You can't play against yourself");
+    // do I need player2 to pass in player1Pk and verify this?
+    assert(player1Pk == player1, "This is the wrong game");
+    const result = guessNum(numberGuess, sk);
+    return result;
 }
 
-export circuit onChainSetNum(n: Uint<16>): [] {
-    assert(player1 == publicKey(localSkOrError()), "Only player1 can set the number");
-    assert(getNum() == 0, "The number has already been set and cannot be changed");
-    setNum(n);
+export circuit onChainSetNum(num: Uint<8>, sk: Bytes<32>): [] {
+    assert(player1 == publicKey(sk), "You are not player 1");
+    assert(state == State.UNSET, "The number is already set");
+    numHash = disclose(commitWithSk(num as Bytes<32>, sk));
+    state = State.SET;
 }
 
-export circuit guessNum(n: Uint<16>): Boolean {
-    assert(n != 0, "The number has not been set");
-    // the number to be guessed can be made public now
-    publicNum = disclose(getNum());
-    const correct = (publicNum == n);
-    return correct;
+export circuit guessNum(num: Uint<8>, sk: Bytes<32>): Boolean {
+    const guessHash = disclose(commitWithSk(num as Bytes<32>, sk));
+    return guessHash == numHash;
 }
 
-circuit localSkOrError(): Bytes<32> {
-    // isn't this exposing the users secret key?
-    const maybeSk = disclose(localSk());
-    assert(maybeSk.is_some, "No secret key found");
-    return maybeSk.value;
+circuit commitWithSk(num: Bytes<32>, sk: Bytes<32>): Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([num, sk]));
 }
 
 export circuit publicKey(sk: Bytes<32>): Bytes<32> {
