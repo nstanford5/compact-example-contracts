@@ -1,0 +1,40 @@
+// rename to private-guest-list?
+pragma language_version 0.21;
+
+import CompactStandardLibrary;
+
+// organizers are public
+export ledger organizerPks: Set<Bytes<32>>;
+// participants are hashed until they arrive
+export ledger hashedPartyGoers: Set<Bytes<32>>;
+export ledger checkedInParty: Set<Bytes<32>>;
+
+// maybe add initial list of participants?
+constructor(sk: Bytes<32>){
+    organizerPks.insert(disclose(publicKey(sk)));
+}
+
+export circuit addOrganizer(organizerPk: Bytes<32>, sk: Bytes<32>): [] {
+    assert(organizerPks.member(disclose(publicKey(sk))), "You are not an organizer");
+    assert(!organizerPks.member(disclose(organizerPk)), "You are already in the list");
+    organizerPks.insert(disclose(organizerPk));
+}
+
+export circuit addParticipant(participantPk: Bytes<32>, OrganizerSk: Bytes<32>): [] {
+    assert(organizerPks.member(disclose(publicKey(OrganizerSk))), "You are not an organizer");
+    hashedPartyGoers.insert(disclose(commitWithSk(participantPk, sk)));
+}
+
+export circuit checkIn(participantPk: Bytes<32>, sk: Bytes<32>): [] {
+    assert(organizerPks.member(disclose(publicKey(sk))), "You are not an organizer");
+    assert(hashedPartyGoers.member(commitWithSk(participantPk, sk)), "You are not on the list");
+    checkedInParty.insert(disclose(participantPk));
+}
+
+circuit commitWithSk(participantPk: Bytes<32>, sk: Bytes<32>) : Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([participantPk, sk]));
+}
+
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "welcome-party:pk:"), sk]);
+}

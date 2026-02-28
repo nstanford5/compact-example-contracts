@@ -1,0 +1,51 @@
+/**
+    Silent Auctin where the organizer can set a minimum price
+    that remains unknown to bidders until the max number of bids
+    has been reached. Bidders are aware of each others bids and current highest bid.
+**/
+pragma language_version 0.21;
+import CompactStandardLibrary;
+
+export ledger auctionOrganizer: Bytes<32>;
+export ledger hiddenPrice: Bytes<32>;
+export ledger publicPrice: Uint<8>;
+export ledger bidders: Map<Bytes<32>, Uint<8>>;
+export ledger bidCount: Counter;
+export ledger highestBid: Uint<8>;
+
+constructor(sk: Bytes<32>, minPrice: Uint<8>) {
+    auctionOrganizer = disclose(publicKey(sk));
+    hiddenPrice = commitWithSk(minPrice as Bytes<32>, sk);
+    highestBid = 0;
+}
+
+export circuit bid(pk: Bytes<32>, bidAmount: Uint<8>): [] {
+    assert(bidCount < 9, "Bids full!");
+    const publicBid = disclose(bidAmount);
+    const publicPk = disclose(pk);
+    if(bidders.member(publicPk)){
+        assert(bidders.lookup(publicPk) < publicBid, "New bid too low");
+    }
+    bidders.insert(publicPk, publicBid);
+    bidCount.increment(1);
+    if(publicBid > highestBid){
+        highestBid = publicBid;
+    }
+}
+
+export circuit revealWin(minPrice: Uint<8>, sk: Bytes<32>): Uint<8> {
+    assert(auctionOrganizer == disclose(publicKey(sk)), "You are not the auction organizer");
+    assert(bidCount == 9, "Bidding is not complete until 9 bids have been received");
+    assert(commitWithSk(minPrice as Bytes<32>, sk) == hiddenPrice, "Attempt to change min price detected, shame on you.");
+    // all votes are in, public price can be revealed
+    publicPrice = disclose(minPrice);
+    return highestBid;
+}
+
+circuit commitWithSk(minPrice: Bytes<32>, sk: Bytes<32>): Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([minPrice, sk]));
+}
+
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "silent-auction:pk:"), sk]);
+}

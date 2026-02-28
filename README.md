@@ -3,4 +3,3 @@
 ## @TODO
 1. Battleship
 1. Election
-1. update guessing-game
