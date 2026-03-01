@@ -1,0 +1,172 @@
+pragma language_version 0.21;
+import CompactStandardLibrary;
+
+// individual user state controls to block spam attacks
+enum Player1State {
+    NOT_READY,
+    READY,
+    CHECK
+}
+
+enum Player2State {
+    NOT_READY,
+    READY,
+    CHECK
+}
+
+enum SpaceState {
+    EMPTY,
+    HIT
+}
+
+enum GameState {
+    CONTINUE_PLAY,
+    WIN
+}
+
+export ledger player1: ZswapCoinPublicKey;
+export ledger player2: ZswapCoinPublicKey;
+export ledger player1State: Player1State;
+export ledger player2State: Player2State;
+export ledger gameState: GameState;
+// start with a single line board, move up in complexity
+export ledger board1: Set<Bytes<32>>;
+export ledger board2: Set<Bytes<32>>;
+export ledger player1Shots: List<Uint<8>>;
+export ledger player2Shots: List<Uint<8>>;
+export ledger hitCountBoard1: Counter;
+export ledger hitCountBoard2: Counter;
+export ledger shotResult: SpaceState;
+export ledger winner: ZswapCoinPublicKey;
+
+// 1. player1 starts the game (done)
+// 2. player2 joins the game (done)
+// 3. player1 sets their 2 numbers hashed (done)
+// 4. player2 sets their 2 numbers hashed (done)
+// 5. player1 shoots (public) (done)
+// 6. player2 checks their board (space State is made public) (done)
+// 7. player2 shoots (public) (done)
+// 8. player1 checks their board (space State is made public) (done)
+// ... repeat 5-8 until hitCount == 2 (done)
+constructor(x1: Uint<8>, x2: Uint<8>, sk: Bytes<32>) {
+    assert(x1 > 0 && x2 > 0, "No zero index, please keep your ship on the game board");
+    // fatal flaw? -- knowing the board size makes it easy to guess a persistentHash?
+    // or does hashing it with the sk make it not possible to guess?
+    assert(x1 <= 20 && x2 <= 20, "The board only goes up to 20, please stay in bounds with your ship");
+
+    player1 = ownPublicKey();
+
+    // these are the two marked spaces, hit these and you win
+    // we don't need to "fill a board with empty space"
+    // we just need to hash two numbers and control the guess inputs
+    // and reveal the hit space if they guess the two numbers
+    // this very well demonstrates the limits in persistentHash and why
+    // persistentCommit is better (and how to control user inputs in the backend)
+    const hashedX1 = commitBoardSpace(x1 as Bytes<32>, sk);
+    board1.insert(hashedX1);
+    const hashedX2 = commitBoardSpace(x2 as Bytes<32>, sk);
+    board1.insert(hashedX1);
+
+    // player1 shoots first, this blocks shots until player1 shoots
+    player1State = Player1State.NOT_READY;
+    gameState = GameState.CONTINUE_PLAY;
+}
+
+export circuit acceptGame (x1: Uint<8>, x2: Uint<8>, sk: Bytes<32>) : [] {
+    assert(player1 != ownPublicKey(), "You cannot play against yourself");
+
+    player2 = ownPublicKey();
+    const hashedX1 = commitBoardSpace(x1 as Bytes<32>, sk);
+    board2.insert(hashedX1);
+    const hashedX2 = commitBoardSpace(x2 as Bytes<32>, sk);
+    board2.insert(hashedX2);
+
+    // player1 shoots first, this says that player2 is ready to accept shots
+    player2State = Player2State.READY;
+    gameState = GameState.CONTINUE_PLAY;
+}
+
+export circuit player1Shoot (x: Uint<8>): [] {
+    assert(player1 == ownPublicKey(), "You are not player1");
+    assert(player2State == Player2State.READY, "Player2 has not finished setting up their board");
+    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
+    // redundent check? -- is this unnecessary or good practice?
+    assert(!player1Shots.head().is_some, "Shot already present and being checked");
+
+    // post the shot publicly
+    player1Shots.pushFront(disclose(x));
+    // player2 ready to check board
+    player2State = Player2State.CHECK;
+}
+
+export circuit player2Shoot(x: Uint<8>): [] {
+    assert(player2 == ownPublicKey(), "You are not player2");
+    assert(player1State == Player1State.READY, "Player 1 is not ready");
+    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
+    // redundent check? -- is this unnecessary or good practice?
+    assert(!player2Shots.head().is_some, "Shot already present and being checked");
+
+    // post the shot publicly
+    player2Shots.pushFront(disclose(x));
+    // player1 ready to check board
+    player1State = Player1State.CHECK;
+}
+
+export circuit checkBoard1 (sk: Bytes<32>): SpaceState {
+    assert(player1 == ownPublicKey(), "You are not player1");
+    assert(player1State == Player1State.CHECK, "Board not ready to be checked");
+    assert(player2Shots.head().is_some, "No shot to check");
+    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
+
+    // information present, change state ASAP to block further shots
+    player1State = Player1State.NOT_READY;
+
+    const currentShot = player2Shots.head().value;
+    const shotHash = commitBoardSpace(currentShot as Bytes<32>, sk);
+    if(board2.member(shotHash)) {
+        hitCountBoard2.increment(1);
+        shotResult = SpaceState.HIT;
+        gameState = hitCountBoard1 < 2 ? GameState.CONTINUE_PLAY : GameState.WIN;
+        winner = player2;
+    }
+    if(!board2.member(shotHash)) {
+        shotResult = SpaceState.EMPTY;
+    }
+    player2Shots.popFront();
+    player2State = Player2State.READY;
+    return shotResult;
+}
+
+export circuit checkBoard2 (sk: Bytes<32>): SpaceState {
+    assert(player2 == ownPublicKey(), "You are not player2");
+    assert(player2State == Player2State.CHECK, "Board not ready to be checked");
+    assert(!player1Shots.head().is_some, "No shot to check");
+    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
+
+    // information present, change state ASAP to block further shots
+    player2State = Player2State.NOT_READY;
+
+    const currentShot = player1Shots.head().value;
+    const shotHash = commitBoardSpace(currentShot as Bytes<32>, sk);
+    if (board1.member(shotHash)){
+        hitCountBoard1.increment(1);
+        shotResult = SpaceState.HIT;
+        gameState = hitCountBoard2 < 2 ? GameState.CONTINUE_PLAY : GameState.WIN;
+        winner = player1;
+    }
+    if(!board1.member(shotHash)){
+        shotResult = SpaceState.EMPTY;
+    }
+    // remove the shot from the List, making the List empty
+    player1Shots.popFront();
+    player1State = Player1State.READY;
+    return shotResult;
+}
+
+export circuit commitBoardSpace(x: Bytes<32>, sk: Bytes<32>) : Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([x, sk]));
+}
+
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "battleship:pk:"), sk]);
+}
