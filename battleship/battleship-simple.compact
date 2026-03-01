@@ -65,7 +65,7 @@ constructor(x1: Uint<8>, x2: Uint<8>, sk: Bytes<32>) {
     const hashedX1 = commitBoardSpace(x1 as Bytes<32>, sk);
     board1.insert(hashedX1);
     const hashedX2 = commitBoardSpace(x2 as Bytes<32>, sk);
-    board1.insert(hashedX1);
+    board1.insert(hashedX2);
 
     // player1 shoots first, this blocks shots until player1 shoots
     player1State = Player1State.NOT_READY;

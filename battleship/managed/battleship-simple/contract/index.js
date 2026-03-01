@@ -558,7 +558,7 @@ export class Contract {
                                                          value: { value: _descriptor_2.toValue(5n),
                                                                   alignment: _descriptor_2.alignment() } }] } },
                                        { push: { storage: false,
-                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(hashedX1_0),
+                                                 value: __compactRuntime.StateValue.newCell({ value: _descriptor_0.toValue(hashedX2_0),
                                                                                               alignment: _descriptor_0.alignment() }).encode() } },
                                        { push: { storage: true,
                                                  value: __compactRuntime.StateValue.newNull().encode() } },
