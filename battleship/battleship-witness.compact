@@ -1,0 +1,187 @@
+// Question: which solution is better, the simple or the witness?
+// I think it is the witness, the more code I write here
+
+pragma language_version 0.21;
+import CompactStandardLibrary;
+
+export enum BoardState { UNSET, SET }
+export enum ShotState { MISS, HIT }
+enum TurnState {
+    PLAYER_1_SHOOT,
+    PLAYER_1_CHECK,
+    PLAYER_2_SHOOT,
+    PLAYER_2_CHECK,
+}
+
+enum WinState {
+    CONTINUE_PLAY,
+    PLAYER_1_WINS,
+    PLAYER_2_WINS
+}
+
+export ledger player1: ZswapCoinPublicKey;
+export ledger player2: ZswapCoinPublicKey;
+export ledger turn: TurnState;
+// linear board shape until the complexity can be increased to 2D
+export ledger board1: Set<Bytes<32>>;// hashed storage of ship locations
+export ledger board2: Set<Bytes<32>>;
+export ledger board1State: BoardState;
+export ledger board2State: BoardState;
+export ledger player1Shot: List<Uint<8>>;
+export ledger player2Shot: List<Uint<8>>;
+export ledger board1Hits: Set<Uint<8>>;
+export ledger board2Hits: Set<Uint<8>>;
+export ledger winState: WinState;
+export ledger board1HitCount: Counter;
+export ledger board2HitCount: Counter;
+
+witness setBoard(x1: Uint<8>, x2: Uint<8>) : BoardState;
+witness checkBoard(x: Uint<8>) : ShotState;
+
+// Question: is it best practice to use the constructor this way? i.e. the contract deployer is player1?
+// Question: it seems safe to pass sk through here (and other functions)?
+constructor(x1: Uint<8>, x2: Uint<8>, sk: Bytes<32>) {
+    assert(x1 != x2, "Cannot use the same number twice");
+    assert(x1 > 0 && x2 > 0, "No zero index, board starts at 1");
+    assert(x1 <= 20 && x2 <= 20, "Out of bounds, please keep ships on the board");
+    player1 = ownPublicKey();
+
+    // hash the inputs to verify them later
+    const hash1 = commitBoardSpace(x1 as Bytes<32>, sk);
+    board1.insert(hash1);
+    const hash2 = commitBoardSpace(x2 as Bytes<32>, sk);
+    board1.insert(hash2);
+
+    // intent: only disclose the state SET or UNSET
+    // Question: does the disclose only disclose the return? Are the inputs safe?
+    // Answer?: https://docs.midnight.network/relnotes/compact/compact-0-14-0#how-to-fix-your-code
+    board1State = disclose(setBoard(x1, x2));
+    assert(board1State == BoardState.SET, "Please update the state of board1 to SET");
+    board2State = BoardState.UNSET;// setting initial state of board2, allowing a player2 to acceptGame
+    winState = WinState.CONTINUE_PLAY;
+}
+
+export circuit acceptGame(x1: Uint<8>, x2: Uint<8>, sk: Bytes<32>) : [] {
+    assert(player1 != ownPublicKey(), "You cannot play against yourself");
+    assert(board2State == BoardState.UNSET, "There is already a player2");
+    assert(x1 != x2, "Cannot use the same number twice");
+    assert(x1 > 0 && x2 > 0, "No zero index, please keep ships on the board");
+    assert(x1 <= 20 && x2 <= 20, "Out of bounds, please keep ships on the board");
+
+    player2 = ownPublicKey();
+
+    // hash inputs and store them to the ledger
+    const hash1 = commitBoardSpace(x1 as Bytes<32>, sk);
+    board2.insert(hash1);
+    const hash2 = commitBoardSpace(x2 as Bytes<32>, sk);
+    board2.insert(hash2);
+
+    // set board and update state
+    board2State = disclose(setBoard(x1, x2));
+    assert(board2State == BoardState.SET, "Please update the state of your board to SET");
+    turn = TurnState.PLAYER_1_SHOOT;
+}
+
+export circuit player1Shoot (x: Uint<8>): [] {
+    assert(player1 == ownPublicKey(), "You are not player1");
+    assert(board2State == BoardState.SET, "Player 2 has not yet set their board");
+    assert(turn == TurnState.PLAYER_1_SHOOT, "It is not player1 turn to shoot");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(x > 0 && x <= 20, "Shot out of bounds, please shoot on the board");
+    assert(player1Shot.isEmpty(), "Attempt to double shoot");
+
+    // shots are public knowledge
+    const currentShot = disclose(x);
+    assert(!board2Hits.member(currentShot), "Cheat Detected: Player1: Attempt to repeat a previous HIT");
+
+    player1Shot.pushFront(currentShot);
+    turn = TurnState.PLAYER_2_CHECK;
+}
+
+export circuit player2Shoot(x: Uint<8>): [] {
+    assert(player2 == ownPublicKey(), "You are not player2");
+    assert(turn == TurnState.PLAYER_2_SHOOT, "It is not player2 turn to shoot");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(x > 0 && x <= 20, "Shot out of bounds, please shoot on the board");
+    assert(player2Shot.isEmpty(), "Attempt to double shoot");
+
+    // shots are public knowledge
+    const currentShot = disclose(x);
+    assert(!board1Hits.member(currentShot), "Cheat Detected: Player2: Attempt to repeat a previous HIT");
+
+    player2Shot.pushFront(currentShot);
+    turn = TurnState.PLAYER_1_CHECK;
+}
+
+export circuit checkBoard1 (sk: Bytes<32>) : WinState {
+    assert(player1 == ownPublicKey(), "You are not player1");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(turn == TurnState.PLAYER_1_CHECK, "It is not Player 1 turn to CHECK");
+    assert(!player2Shot.isEmpty(), "No shot to check");
+
+    const currentShot = player2Shot.head().value;
+    const honestyCheckHash = commitBoardSpace(currentShot as Bytes<32>, sk);
+
+    // currentShot has already been exposed, but we need to explicitly disclose the return
+    const shotState = disclose(checkBoard(currentShot));
+    assert(shotState == ShotState.HIT || shotState == ShotState.MISS, "Please provide a valid state");
+
+    if(shotState == ShotState.MISS){
+
+        assert(!board1.member(honestyCheckHash), "Cheat Detected: Player 1: claimed a MISS, when it was in fact a HIT");
+    
+    } else if (shotState == ShotState.HIT) {
+
+        // don't trust, verify
+        assert(board1.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a HIT, when is was in fact a MISS. Why would they do that?");
+        board1HitCount.increment(1);
+        board1Hits.insert(currentShot);
+        winState = board1HitCount == 3 ? WinState.PLAYER_2_WINS : WinState.CONTINUE_PLAY;
+    }
+    player2Shot.popFront();
+    turn = TurnState.PLAYER_1_SHOOT;
+    return winState;
+}
+
+export circuit checkBoard2 (sk: Bytes<32>) : WinState {
+    assert(player2 == ownPublicKey(), "You are not player2");
+    assert(board2State == BoardState.SET, "Player 2 has not set the board yet");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(turn == TurnState.PLAYER_2_CHECK, "It is not Player 2 turn to CHECK");
+    assert(!player1Shot.isEmpty(), "No shot to check");
+
+    const currentShot = player1Shot.head().value;
+    assert(!board2Hits.member(currentShot), "Cheat Detected: Player 1: Attempt to repeat a previous HIT");
+    // Question: does the inclusion of the sk force the user to sign here?
+    // could cause a problem if tokens are at stake, though I suppose you
+    // could just assume that the lack of signing is an attempt to cheat
+    const honestyCheckHash = commitBoardSpace(currentShot as Bytes<32>, sk);
+
+    const shotState = disclose(checkBoard(currentShot));
+    assert(shotState == ShotState.HIT || shotState == ShotState.MISS, "Please provide a valid state");
+
+    if(shotState == ShotState.MISS){
+        assert(!board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a MISS, when it was in fact a HIT");
+    } else if (shotState == ShotState.HIT) {
+        // dont trust, verify
+        assert(board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a HIT, when is was in fact a MISS. Why would they do that?");
+        board2HitCount.increment(1);
+        board2Hits.insert(currentShot);
+        // check hit count
+        winState = board2HitCount == 3 ? WinState.PLAYER_1_WINS : WinState.CONTINUE_PLAY;
+    }
+    player1Shot.popFront();
+    turn = TurnState.PLAYER_2_SHOOT;
+    return winState;
+}
+
+// Question: should I be using persistenCommit here? Or is the hash sufficient, because I am
+// also passing it the sk? Is that best practice?
+export circuit commitBoardSpace(x: Bytes<32>, sk: Bytes<32>) : Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([x, sk]));
+}
+
+// Question: what exactly is this function doing?
+export circuit publicKey(sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "battleship-full:pk:"), sk]);
+}
