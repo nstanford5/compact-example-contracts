@@ -1,172 +1,209 @@
+/**
+    An intermediate Compact example for the docs that aims to demonstrate several features(in no particular order):
+    1. Explicit state management controls
+    2. Verifying previously committed hashed data
+    3. "Don't trust, verify"
+    4. List operations
+    5. Maybe transition from persistentHash to demonstrating the value of persistentCommit instead?
+    6. Selective Disclosure
+    7. Working with the Compact compiler
+
+    SME Review:
+    In need of Compact SME review so that we are recommending best practice in writing Compact. There are
+    several ways to implement this program (Battleship) to different degrees of complexity, but the intention 
+    of this version is to keep the logic relatively simple to keep the complexity low. The goal here is to
+    demonstrate foundational best practices before moving the programs up further in complexity.
+**/
+
 pragma language_version 0.21;
 import CompactStandardLibrary;
 
-// individual user state controls to block spam attacks
-enum Player1State {
-    NOT_READY,
-    READY,
-    CHECK
+export enum BoardState { UNSET, SET }
+export enum ShotState { MISS, HIT }
+enum TurnState {
+    PLAYER_1_SHOOT,
+    PLAYER_1_CHECK,
+    PLAYER_2_SHOOT,
+    PLAYER_2_CHECK,
 }
-
-enum Player2State {
-    NOT_READY,
-    READY,
-    CHECK
-}
-
-enum SpaceState {
-    EMPTY,
-    HIT
-}
-
-enum GameState {
+enum WinState {
     CONTINUE_PLAY,
-    WIN
+    PLAYER_1_WINS,
+    PLAYER_2_WINS
 }
 
 export ledger player1: ZswapCoinPublicKey;
 export ledger player2: ZswapCoinPublicKey;
-export ledger player1State: Player1State;
-export ledger player2State: Player2State;
-export ledger gameState: GameState;
-// start with a single line board, move up in complexity
-export ledger board1: Set<Bytes<32>>;
+export ledger turn: TurnState;
+// linear board shape until the complexity can be increased to 2D
+export ledger board1: Set<Bytes<32>>;// hashed storage of ship locations
 export ledger board2: Set<Bytes<32>>;
-export ledger player1Shots: List<Uint<8>>;
-export ledger player2Shots: List<Uint<8>>;
-export ledger hitCountBoard1: Counter;
-export ledger hitCountBoard2: Counter;
-export ledger shotResult: SpaceState;
-export ledger winner: ZswapCoinPublicKey;
+export ledger board1State: BoardState;
+export ledger board2State: BoardState;
+export ledger player1Shot: List<Uint<8>>;
+export ledger player2Shot: List<Uint<8>>;
+export ledger board1Hits: Set<Uint<8>>;
+export ledger board2Hits: Set<Uint<8>>;
+export ledger winState: WinState;
+export ledger board1HitCount: Counter;
+export ledger board2HitCount: Counter;
 
-// 1. player1 starts the game (done)
-// 2. player2 joins the game (done)
-// 3. player1 sets their 2 numbers hashed (done)
-// 4. player2 sets their 2 numbers hashed (done)
-// 5. player1 shoots (public) (done)
-// 6. player2 checks their board (space State is made public) (done)
-// 7. player2 shoots (public) (done)
-// 8. player1 checks their board (space State is made public) (done)
-// ... repeat 5-8 until hitCount == 2 (done)
-constructor(x1: Uint<8>, x2: Uint<8>, sk: Bytes<32>) {
-    assert(x1 > 0 && x2 > 0, "No zero index, please keep your ship on the game board");
-    // fatal flaw? -- knowing the board size makes it easy to guess a persistentHash?
-    // or does hashing it with the sk make it not possible to guess?
-    assert(x1 <= 20 && x2 <= 20, "The board only goes up to 20, please stay in bounds with your ship");
+witness setBoard(_x1: Uint<8>, _x2: Uint<8>) : BoardState;
+witness checkBoard(x: Uint<8>) : ShotState;
 
+// Question: is it best practice to use the constructor this way? i.e. the contract deployer is player1?
+// Question: it seems safe to pass _sk through here (and other functions)? Probably bad practice though?
+constructor(_x1: Uint<8>, _x2: Uint<8>, _sk: Bytes<32>) {
+    assert(_x1 != _x2, "Cannot use the same number twice");
+    assert(_x1 > 0 && _x2 > 0, "No zero index, board starts at 1");
+    assert(_x1 <= 20 && _x2 <= 20, "Out of bounds, please keep ships on the board");
+    
+    // is this a safe way to track a player?
     player1 = ownPublicKey();
 
-    // these are the two marked spaces, hit these and you win
-    // we don't need to "fill a board with empty space"
-    // we just need to hash two numbers and control the guess inputs
-    // and reveal the hit space if they guess the two numbers
-    // this very well demonstrates the limits in persistentHash and why
-    // persistentCommit is better (and how to control user inputs in the backend)
-    const hashedX1 = commitBoardSpace(x1 as Bytes<32>, sk);
-    board1.insert(hashedX1);
-    const hashedX2 = commitBoardSpace(x2 as Bytes<32>, sk);
-    board1.insert(hashedX2);
+    // hash the inputs to verify them later, user needs to provide the same value and _sk
+    const hash1 = commitBoardSpace(_x1 as Bytes<32>, _sk);
+    board1.insert(hash1);
+    const hash2 = commitBoardSpace(_x2 as Bytes<32>, _sk);
+    board1.insert(hash2);
 
-    // player1 shoots first, this blocks shots until player1 shoots
-    player1State = Player1State.NOT_READY;
-    gameState = GameState.CONTINUE_PLAY;
+    // best practice example -- don't disclose(setBoard(_x1, _x2)), but disclose only what you need (boardState);
+    const boardState = setBoard(_x1, _x2);
+    board1State = disclose(boardState);
+    assert(board1State == BoardState.SET, "Please update the state of board1 to SET");
+
+    board2State = BoardState.UNSET;// setting initial state of board2, allowing a player2 to acceptGame
+    winState = WinState.CONTINUE_PLAY;// initial state for the winning status
 }
 
-export circuit acceptGame (x1: Uint<8>, x2: Uint<8>, sk: Bytes<32>) : [] {
+export circuit acceptGame(_x1: Uint<8>, _x2: Uint<8>, _sk: Bytes<32>) : [] {
     assert(player1 != ownPublicKey(), "You cannot play against yourself");
+    assert(board2State == BoardState.UNSET, "There is already a player2");
+    assert(_x1 != _x2, "Cannot use the same number twice");
+    assert(_x1 > 0 && _x2 > 0, "No zero index, please keep ships on the board");
+    assert(_x1 <= 20 && _x2 <= 20, "Out of bounds, please keep ships on the board");
 
     player2 = ownPublicKey();
-    const hashedX1 = commitBoardSpace(x1 as Bytes<32>, sk);
-    board2.insert(hashedX1);
-    const hashedX2 = commitBoardSpace(x2 as Bytes<32>, sk);
-    board2.insert(hashedX2);
 
-    // player1 shoots first, this says that player2 is ready to accept shots
-    player2State = Player2State.READY;
-    gameState = GameState.CONTINUE_PLAY;
+    // hash inputs and store them to the ledger for lookup later
+    // maybe this should be a Merkle Tree instead?
+    const hash1 = commitBoardSpace(_x1 as Bytes<32>, _sk);
+    board2.insert(hash1);
+    const hash2 = commitBoardSpace(_x2 as Bytes<32>, _sk);
+    board2.insert(hash2);
+
+    const boardState = setBoard(_x1, _x2);
+    board2State = disclose(boardState);
+    assert(board2State == BoardState.SET, "Please update the state of your board to SET");
+    
+    turn = TurnState.PLAYER_1_SHOOT;
 }
 
 export circuit player1Shoot (x: Uint<8>): [] {
     assert(player1 == ownPublicKey(), "You are not player1");
-    assert(player2State == Player2State.READY, "Player2 has not finished setting up their board");
-    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
-    // redundent check? -- is this unnecessary or good practice?
-    assert(!player1Shots.head().is_some, "Shot already present and being checked");
+    assert(board2State == BoardState.SET, "Player 2 has not yet set their board");
+    assert(turn == TurnState.PLAYER_1_SHOOT, "It is not player1 turn to shoot");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(x > 0 && x <= 20, "Shot out of bounds, please shoot on the board");
+    assert(player1Shot.isEmpty(), "Attempt to double shoot");
 
-    // post the shot publicly
-    player1Shots.pushFront(disclose(x));
-    // player2 ready to check board
-    player2State = Player2State.CHECK;
+    // shots are public knowledge
+    const currentShot = disclose(x);
+    assert(!board2Hits.member(currentShot), "Cheat Detected: Player1: Attempt to repeat a previous HIT");
+
+    player1Shot.pushFront(currentShot);
+    turn = TurnState.PLAYER_2_CHECK;
 }
 
 export circuit player2Shoot(x: Uint<8>): [] {
     assert(player2 == ownPublicKey(), "You are not player2");
-    assert(player1State == Player1State.READY, "Player 1 is not ready");
-    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
-    // redundent check? -- is this unnecessary or good practice?
-    assert(!player2Shots.head().is_some, "Shot already present and being checked");
+    assert(turn == TurnState.PLAYER_2_SHOOT, "It is not player2 turn to shoot");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(x > 0 && x <= 20, "Shot out of bounds, please shoot on the board");
+    assert(player2Shot.isEmpty(), "Attempt to double shoot");
 
-    // post the shot publicly
-    player2Shots.pushFront(disclose(x));
-    // player1 ready to check board
-    player1State = Player1State.CHECK;
+    // shots are public knowledge
+    const currentShot = disclose(x);
+    assert(!board1Hits.member(currentShot), "Cheat Detected: Player2: Attempt to repeat a previous HIT");
+
+    player2Shot.pushFront(currentShot);
+    turn = TurnState.PLAYER_1_CHECK;
 }
 
-export circuit checkBoard1 (sk: Bytes<32>): SpaceState {
+export circuit checkBoard1 (_sk: Bytes<32>) : WinState {
     assert(player1 == ownPublicKey(), "You are not player1");
-    assert(player1State == Player1State.CHECK, "Board not ready to be checked");
-    assert(player2Shots.head().is_some, "No shot to check");
-    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(turn == TurnState.PLAYER_1_CHECK, "It is not Player 1 turn to CHECK");
+    assert(!player2Shot.isEmpty(), "No shot to check");
 
-    // information present, change state ASAP to block further shots
-    player1State = Player1State.NOT_READY;
+    const currentShot = player2Shot.head().value;
+    const honestyCheckHash = commitBoardSpace(currentShot as Bytes<32>, _sk);
 
-    const currentShot = player2Shots.head().value;
-    const shotHash = commitBoardSpace(currentShot as Bytes<32>, sk);
-    if(board2.member(shotHash)) {
-        hitCountBoard2.increment(1);
-        shotResult = SpaceState.HIT;
-        gameState = hitCountBoard1 < 2 ? GameState.CONTINUE_PLAY : GameState.WIN;
-        winner = player2;
+    // currentShot has already been exposed, but we need to state that it is safe to disclose the return too
+    const shotState = disclose(checkBoard(currentShot));
+    assert(shotState == ShotState.HIT || shotState == ShotState.MISS, "Please provide a valid state");
+
+    if(shotState == ShotState.MISS){
+
+        assert(!board1.member(honestyCheckHash), "Cheat Detected: Player 1: claimed a MISS, when it was in fact a HIT");
+    
+    } else if (shotState == ShotState.HIT) {
+
+        // don't trust, verify
+        assert(board1.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a HIT, when is was in fact a MISS. Why would they do that?");
+        board1HitCount.increment(1);
+        board1Hits.insert(currentShot);
+
+        // did someone win?
+        winState = board1HitCount == 3 ? WinState.PLAYER_2_WINS : WinState.CONTINUE_PLAY;
     }
-    if(!board2.member(shotHash)) {
-        shotResult = SpaceState.EMPTY;
-    }
-    player2Shots.popFront();
-    player2State = Player2State.READY;
-    return shotResult;
+    player2Shot.popFront();
+    turn = TurnState.PLAYER_1_SHOOT;
+    return winState;
 }
 
-export circuit checkBoard2 (sk: Bytes<32>): SpaceState {
+export circuit checkBoard2 (_sk: Bytes<32>) : WinState {
     assert(player2 == ownPublicKey(), "You are not player2");
-    assert(player2State == Player2State.CHECK, "Board not ready to be checked");
-    assert(!player1Shots.head().is_some, "No shot to check");
-    assert(gameState == GameState.CONTINUE_PLAY, "The game has ended");
+    assert(board2State == BoardState.SET, "Player 2 has not set the board yet");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(turn == TurnState.PLAYER_2_CHECK, "It is not Player 2 turn to CHECK");
+    assert(!player1Shot.isEmpty(), "No shot to check");
 
-    // information present, change state ASAP to block further shots
-    player2State = Player2State.NOT_READY;
+    const currentShot = player1Shot.head().value;
+    assert(!board2Hits.member(currentShot), "Cheat Detected: Player 1: Attempt to repeat a previous HIT");
 
-    const currentShot = player1Shots.head().value;
-    const shotHash = commitBoardSpace(currentShot as Bytes<32>, sk);
-    if (board1.member(shotHash)){
-        hitCountBoard1.increment(1);
-        shotResult = SpaceState.HIT;
-        gameState = hitCountBoard2 < 2 ? GameState.CONTINUE_PLAY : GameState.WIN;
-        winner = player1;
+    // Question: does the inclusion of the _sk in a parameter force the user to sign?
+    // This design could cause a problem if tokens are at stake, though I suppose you
+    // could just assume that the lack of signing is an attempt to cheat
+    const honestyCheckHash = commitBoardSpace(currentShot as Bytes<32>, _sk);
+
+    const shotState = disclose(checkBoard(currentShot));
+    assert(shotState == ShotState.HIT || shotState == ShotState.MISS, "Please provide a valid state");
+
+    if(shotState == ShotState.MISS){
+
+        assert(!board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a MISS, when it was in fact a HIT");
+    
+    } else if (shotState == ShotState.HIT) {
+        // dont trust, verify
+        assert(board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a HIT, when is was in fact a MISS. Why would they do that?");
+        board2HitCount.increment(1);
+        board2Hits.insert(currentShot);
+
+        // did someone win?
+        winState = board2HitCount == 3 ? WinState.PLAYER_1_WINS : WinState.CONTINUE_PLAY;
     }
-    if(!board1.member(shotHash)){
-        shotResult = SpaceState.EMPTY;
-    }
-    // remove the shot from the List, making the List empty
-    player1Shots.popFront();
-    player1State = Player1State.READY;
-    return shotResult;
+    player1Shot.popFront();
+    turn = TurnState.PLAYER_2_SHOOT;
+    return winState;
 }
 
-export circuit commitBoardSpace(x: Bytes<32>, sk: Bytes<32>) : Bytes<32> {
-    return disclose(persistentHash<Vector<2, Bytes<32>>>([x, sk]));
+// Question: should I be using persistenCommit here? Or is the hash sufficient, because I am
+// also passing it the _sk? Is that best practice?
+circuit commitBoardSpace(_x: Bytes<32>, _sk: Bytes<32>) : Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([_x, _sk]));
 }
 
-export circuit publicKey(sk: Bytes<32>): Bytes<32> {
-    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "battleship:pk:"), sk]);
+export circuit publicKey(_sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "battleship-full:pk:"), _sk]);
 }

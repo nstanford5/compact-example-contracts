@@ -1,44 +1,83 @@
-// rename to private-guest-list?
-pragma language_version 0.21;
+/**
+    Private party allows a party organizer(s) to keep the guest list of a party
+    private until the guests arrive to check in.
+    
+    A beginner compact example intended for the docs as an introduction to:
+    1. Hiding information on the ledger
+    2. Access control to circuits
+    3. Set operations
+    4. Witness functions
 
+    SME review:
+    Compact SME review is required to ensure we are recommending security best
+    practices in docs examples.
+**/
+
+pragma language_version 0.21;
 import CompactStandardLibrary;
 
+enum PartyState {
+    NOT_READY,
+    READY
+}
+
 // organizers are public
-export ledger organizerPks: Set<ZswapCoinPublicKey>;
+export ledger organizers: Set<ZswapCoinPublicKey>;
 // participants are hashed until they arrive
 export ledger hashedPartyGoers: Set<Bytes<32>>;
 export ledger checkedInParty: Set<Bytes<32>>;
+export ledger partyState: PartyState;
+
+witness startParty() : PartyState;
 
 // maybe add initial list of participants?
 constructor(){
-    organizerPks.insert(ownPublicKey());
+    organizers.insert(ownPublicKey());
+    partyState = PartyState.NOT_READY;
 }
 
 export circuit addOrganizer(): [] {
-    const organizerPk = ownPublicKey();
-    assert(organizerPks.member(organizerPk), "You are not an organizer");
-    assert(!organizerPks.member(organizerPk), "You are already in the organizer list");
+    const organizer = ownPublicKey();
+    // only organizers can add organizers
+    assert(organizers.member(organizer), "You are not an organizer");
+    assert(!organizers.member(organizer), "You are already in the organizer list");
+    assert(partyState == PartyState.NOT_READY, "The party has already started");
     
-    organizerPks.insert(organizerPk);
+    organizers.insert(organizer);
 }
 
-// to be called by Organizer
-export circuit addParticipant(participantPk: Bytes<32>, OrganizerSk: Bytes<32>): [] {
-    assert(organizerPks.member(ownPublicKey()), "You are not an organizer");
-    hashedPartyGoers.insert(disclose(commitWithSk(participantPk, OrganizerSk)));
+export circuit addParticipant(_participantPk: Bytes<32>, _organizerSk: Bytes<32>): [] {
+    // only organizers can add party goers
+    assert(organizers.member(ownPublicKey()), "You are not an organizer");
+    assert(partyState == PartyState.NOT_READY, "The party has already started");
+    assert(hashedPartyGoers.size() < 99, "The list is full.");
+
+    const participant = commitWithSk(_participantPk, _organizerSk);
+    hashedPartyGoers.insert(disclose(participant));
+
+    if (hashedPartyGoers.size() == 99) {
+        // start the party, locally
+        const localPartyState = startParty();
+        // don't trust, verify
+        assert(localPartyState == PartyState.READY, "Please start the party, the list is full");
+        partyState = PartyState.READY;
+    }
 }
 
-export circuit checkIn(participantPk: Bytes<32>, organizerSk: Bytes<32>): [] {
-    assert(organizerPks.member(ownPublicKey()), "You are not an organizer");
+export circuit checkIn(participantPk: Bytes<32>, _organizerSk: Bytes<32>): [] {
+    assert(organizers.member(ownPublicKey()), "You are not an organizer");
+    assert(partyState == PartyState.READY, "The party has not started yet");
+    assert(checkedInParty.size() < 99, "All guests have already checked in");
+    assert(hashedPartyGoers.member(commitWithSk(participantPk, _organizerSk)), "You are not on the list");
 
-    assert(hashedPartyGoers.member(commitWithSk(participantPk, organizerSk)), "You are not on the list");
     checkedInParty.insert(disclose(participantPk));
 }
 
-circuit commitWithSk(participantPk: Bytes<32>, sk: Bytes<32>) : Bytes<32> {
-    return disclose(persistentHash<Vector<2, Bytes<32>>>([participantPk, sk]));
+// persistentHash is probably better here than persistentCommit?
+circuit commitWithSk(_participantPk: Bytes<32>, _sk: Bytes<32>) : Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([_participantPk, _sk]));
 }
 
-export circuit publicKey(sk: Bytes<32>): Bytes<32> {
-    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "welcome-party:pk:"), sk]);
+export circuit publicKey(_sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "welcome-party:pk:"), _sk]);
 }
