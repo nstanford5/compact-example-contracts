@@ -5,7 +5,7 @@
     A beginner compact example intended for the docs as an introduction to:
     1. Hiding information on the ledger
     2. Access control to circuits
-    3. Set operations
+    3. Operations on a set
     4. Witness functions
 
     SME review:
@@ -16,7 +16,8 @@
 pragma language_version 0.21;
 import CompactStandardLibrary;
 
-enum PartyState {
+// do I need the export here?
+export enum PartyState {
     NOT_READY,
     READY
 }
@@ -27,6 +28,7 @@ export ledger organizers: Set<ZswapCoinPublicKey>;
 export ledger hashedPartyGoers: Set<Bytes<32>>;
 export ledger checkedInParty: Set<Bytes<32>>;
 export ledger partyState: PartyState;
+export ledger partiers: Counter;
 
 witness startParty() : PartyState;
 
@@ -36,26 +38,26 @@ constructor(){
     partyState = PartyState.NOT_READY;
 }
 
-export circuit addOrganizer(): [] {
+export circuit addOrganizer(newOrganizerPk: ZswapCoinPublicKey): [] {
     const organizer = ownPublicKey();
     // only organizers can add organizers
     assert(organizers.member(organizer), "You are not an organizer");
     assert(!organizers.member(organizer), "You are already in the organizer list");
     assert(partyState == PartyState.NOT_READY, "The party has already started");
     
-    organizers.insert(organizer);
+    organizers.insert(disclose(newOrganizerPk));
 }
 
 export circuit addParticipant(_participantPk: Bytes<32>, _organizerSk: Bytes<32>): [] {
     // only organizers can add party goers
     assert(organizers.member(ownPublicKey()), "You are not an organizer");
     assert(partyState == PartyState.NOT_READY, "The party has already started");
-    assert(hashedPartyGoers.size() < 99, "The list is full.");
+    assert(partiers < 99, "The list is full.");
 
     const participant = commitWithSk(_participantPk, _organizerSk);
     hashedPartyGoers.insert(disclose(participant));
 
-    if (hashedPartyGoers.size() == 99) {
+    if (partiers == 99) {
         // start the party, locally
         const localPartyState = startParty();
         // don't trust, verify
@@ -67,7 +69,7 @@ export circuit addParticipant(_participantPk: Bytes<32>, _organizerSk: Bytes<32>
 export circuit checkIn(participantPk: Bytes<32>, _organizerSk: Bytes<32>): [] {
     assert(organizers.member(ownPublicKey()), "You are not an organizer");
     assert(partyState == PartyState.READY, "The party has not started yet");
-    assert(checkedInParty.size() < 99, "All guests have already checked in");
+    assert(partiers < 99, "All guests have already checked in");
     assert(hashedPartyGoers.member(commitWithSk(participantPk, _organizerSk)), "You are not on the list");
 
     checkedInParty.insert(disclose(participantPk));
