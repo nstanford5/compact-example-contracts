@@ -14,14 +14,13 @@ export const createPartyPrivateState = (partyState: number) => ({
     partyState,
 });
 
-
 export const witnesses = {
   startParty: ({
     privateState
   }: WitnessContext<Ledger, PartyPrivateState>): [
+    // return types
     PartyPrivateState,
     number
-    // return 1 to start the party
+    // return values
   ] => [privateState, PartyState.READY],
 };
-
