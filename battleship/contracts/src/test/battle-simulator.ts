@@ -2,6 +2,7 @@ import {
     type CircuitContext,
     sampleContractAddress,
     createConstructorContext,
+    createCircuitContext,
     CostModel,
     QueryContext,
 } from '@midnight-ntwrk/compact-runtime';
@@ -24,7 +25,9 @@ export class BattleSimulator {
     // declare types
     readonly contract: Contract<BattlePrivateState>;
     circuitContext: CircuitContext<BattlePrivateState>;
-    startingState: BattlePrivateState;
+    p2CircuitContext: CircuitContext<BattlePrivateState>;
+    p1PrivateState: BattlePrivateState;
+    p2PrivateState: BattlePrivateState;
     boardState: number;
     shotState: number;
 
@@ -33,20 +36,27 @@ export class BattleSimulator {
         this.contract = new Contract<BattlePrivateState>(witnesses);
         this.boardState = BoardState.UNSET;
         this.shotState = ShotState.MISS;
-        this.startingState = createBattlePrivateState(
+        const contractAddr = sampleContractAddress();
+        this.p1PrivateState = createBattlePrivateState(
             x1,
             x2,
             this.boardState,
             this.shotState,
+        );
+        this.p2PrivateState = createBattlePrivateState(
+            BigInt(0),
+            BigInt(0),
+            this.boardState,
+            this.shotState
         );
         const {
             currentPrivateState,
             currentContractState,
             currentZswapLocalState
         } = this.contract.initialState( //(context, param1, param2, param3)
-            createConstructorContext(this.startingState, "0".repeat(64)),
-            this.startingState.x1,
-            this.startingState.x2,
+            createConstructorContext(this.p1PrivateState, "0".repeat(64)),
+            this.p1PrivateState.x1,
+            this.p1PrivateState.x2,
             sk
         );
         this.circuitContext = {
@@ -55,9 +65,28 @@ export class BattleSimulator {
             costModel: CostModel.initialCostModel(),
             currentQueryContext: new QueryContext(
                 currentContractState.data,
-                sampleContractAddress(),
+                contractAddr,
             ),
         };
+        const {
+            p2CurrentPrivateState,
+            p2CurrentContractState,
+            p2CurrentZswapLocalState,
+        } = createCircuitContext(
+            contractAddr, 
+            this.p2PrivateState,
+            currentContractState.data,
+
+        );
+        this.p2CircuitContext = {
+            p2CurrentPrivateState,
+            p2CurrentZswapLocalState,
+            costModel: CostModel.initialCostModel(),
+            currentQueryContext: new QueryContext(
+                currentContractState.data,
+                contractAddr,
+            )
+        }
     }
 
     // test helper function

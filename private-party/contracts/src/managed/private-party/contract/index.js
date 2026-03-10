@@ -97,14 +97,14 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('addOrganizer',
                                      'argument 1 (as invoked from Typescript)',
-                                     'private-party.compact line 43 char 1',
+                                     'private-party.compact line 39 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(typeof(newOrganizerPk_0) === 'object' && newOrganizerPk_0.bytes.buffer instanceof ArrayBuffer && newOrganizerPk_0.bytes.BYTES_PER_ELEMENT === 1 && newOrganizerPk_0.bytes.length === 32)) {
           __compactRuntime.typeError('addOrganizer',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'private-party.compact line 43 char 1',
+                                     'private-party.compact line 39 char 1',
                                      'struct ZswapCoinPublicKey<bytes: Bytes<32>>',
                                      newOrganizerPk_0)
         }
@@ -134,21 +134,21 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('addParticipant',
                                      'argument 1 (as invoked from Typescript)',
-                                     'private-party.compact line 53 char 1',
+                                     'private-party.compact line 48 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(_participantPk_0.buffer instanceof ArrayBuffer && _participantPk_0.BYTES_PER_ELEMENT === 1 && _participantPk_0.length === 32)) {
           __compactRuntime.typeError('addParticipant',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'private-party.compact line 53 char 1',
+                                     'private-party.compact line 48 char 1',
                                      'Bytes<32>',
                                      _participantPk_0)
         }
         if (!(_organizerSk_0.buffer instanceof ArrayBuffer && _organizerSk_0.BYTES_PER_ELEMENT === 1 && _organizerSk_0.length === 32)) {
           __compactRuntime.typeError('addParticipant',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'private-party.compact line 53 char 1',
+                                     'private-party.compact line 48 char 1',
                                      'Bytes<32>',
                                      _organizerSk_0)
         }
@@ -179,21 +179,21 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('checkIn',
                                      'argument 1 (as invoked from Typescript)',
-                                     'private-party.compact line 72 char 1',
+                                     'private-party.compact line 66 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
         if (!(participantPk_0.buffer instanceof ArrayBuffer && participantPk_0.BYTES_PER_ELEMENT === 1 && participantPk_0.length === 32)) {
           __compactRuntime.typeError('checkIn',
                                      'argument 1 (argument 2 as invoked from Typescript)',
-                                     'private-party.compact line 72 char 1',
+                                     'private-party.compact line 66 char 1',
                                      'Bytes<32>',
                                      participantPk_0)
         }
         if (!(_organizerSk_0.buffer instanceof ArrayBuffer && _organizerSk_0.BYTES_PER_ELEMENT === 1 && _organizerSk_0.length === 32)) {
           __compactRuntime.typeError('checkIn',
                                      'argument 2 (argument 3 as invoked from Typescript)',
-                                     'private-party.compact line 72 char 1',
+                                     'private-party.compact line 66 char 1',
                                      'Bytes<32>',
                                      _organizerSk_0)
         }
@@ -222,7 +222,7 @@ export class Contract {
         if (!(typeof(contextOrig_0) === 'object' && contextOrig_0.currentQueryContext != undefined)) {
           __compactRuntime.typeError('chainStartParty',
                                      'argument 1 (as invoked from Typescript)',
-                                     'private-party.compact line 81 char 1',
+                                     'private-party.compact line 75 char 1',
                                      'CircuitContext',
                                      contextOrig_0)
         }
@@ -412,7 +412,7 @@ export class Contract {
     if (!(typeof(result_0) === 'number' && result_0 >= 0 && result_0 <= 1)) {
       __compactRuntime.typeError('startParty',
                                  'return value',
-                                 'private-party.compact line 34 char 1',
+                                 'private-party.compact line 31 char 1',
                                  'Enum<PartyState, NOT_READY, READY>',
                                  result_0)
     }
@@ -854,7 +854,7 @@ export function ledger(stateOrChargedState) {
         if (!(typeof(elem_0) === 'object' && elem_0.bytes.buffer instanceof ArrayBuffer && elem_0.bytes.BYTES_PER_ELEMENT === 1 && elem_0.bytes.length === 32)) {
           __compactRuntime.typeError('member',
                                      'argument 1',
-                                     'private-party.compact line 26 char 1',
+                                     'private-party.compact line 24 char 1',
                                      'struct ZswapCoinPublicKey<bytes: Bytes<32>>',
                                      elem_0)
         }
@@ -932,7 +932,7 @@ export function ledger(stateOrChargedState) {
         if (!(elem_0.buffer instanceof ArrayBuffer && elem_0.BYTES_PER_ELEMENT === 1 && elem_0.length === 32)) {
           __compactRuntime.typeError('member',
                                      'argument 1',
-                                     'private-party.compact line 28 char 1',
+                                     'private-party.compact line 25 char 1',
                                      'Bytes<32>',
                                      elem_0)
         }
@@ -1010,7 +1010,7 @@ export function ledger(stateOrChargedState) {
         if (!(elem_0.buffer instanceof ArrayBuffer && elem_0.BYTES_PER_ELEMENT === 1 && elem_0.length === 32)) {
           __compactRuntime.typeError('member',
                                      'argument 1',
-                                     'private-party.compact line 29 char 1',
+                                     'private-party.compact line 26 char 1',
                                      'Bytes<32>',
                                      elem_0)
         }
@@ -1096,7 +1096,7 @@ export const pureCircuits = {
     if (!(_sk_0.buffer instanceof ArrayBuffer && _sk_0.BYTES_PER_ELEMENT === 1 && _sk_0.length === 32)) {
       __compactRuntime.typeError('publicKey',
                                  'argument 1',
-                                 'private-party.compact line 95 char 1',
+                                 'private-party.compact line 88 char 1',
                                  'Bytes<32>',
                                  _sk_0)
     }

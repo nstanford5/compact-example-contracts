@@ -1,6 +1,5 @@
 // This file defines the shape of the private state,
 // as well as the witness function(s)
-
 import { Ledger, PartyState } from './managed/private-party/contract/index.js';
 import { WitnessContext } from '@midnight-ntwrk/compact-runtime';
 

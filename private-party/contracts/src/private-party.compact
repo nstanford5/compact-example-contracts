@@ -16,16 +16,13 @@
 pragma language_version 0.21;
 import CompactStandardLibrary;
 
-// do I need the export here?
 export enum PartyState {
     NOT_READY,
     READY
 }
 
-// organizers are public
-export ledger organizers: Set<ZswapCoinPublicKey>;
-// participants are hashed until they arrive
-export ledger hashedPartyGoers: Set<Bytes<32>>;
+export ledger organizers: Set<ZswapCoinPublicKey>;// organizers are public
+export ledger hashedPartyGoers: Set<Bytes<32>>;// participants are hashed until they arrive
 export ledger checkedInParty: Set<Bytes<32>>;
 export ledger partyState: PartyState;
 export ledger partiers: Counter;
@@ -33,7 +30,6 @@ export ledger maxListSize: Uint<8>;
 
 witness startParty() : PartyState;
 
-// maybe add initial list of participants?
 constructor(){
     organizers.insert(ownPublicKey());
     partyState = PartyState.NOT_READY;
@@ -42,7 +38,6 @@ constructor(){
 
 export circuit addOrganizer(newOrganizerPk: ZswapCoinPublicKey): [] {
     const organizer = ownPublicKey();
-    // only organizers can add organizers
     assert(organizers.member(organizer), "You are not an organizer");
     assert(!organizers.member(disclose(newOrganizerPk)), "You are already in the organizer list");
     assert(partyState == PartyState.NOT_READY, "The party has already started");
@@ -51,7 +46,6 @@ export circuit addOrganizer(newOrganizerPk: ZswapCoinPublicKey): [] {
 }
 
 export circuit addParticipant(_participantPk: Bytes<32>, _organizerSk: Bytes<32>): [] {
-    // only organizers can add party goers
     assert(organizers.member(ownPublicKey()), "You are not an organizer");
     assert(partyState == PartyState.NOT_READY, "The party has already started");
     assert(partiers < maxListSize, "The list is full.");
@@ -61,7 +55,7 @@ export circuit addParticipant(_participantPk: Bytes<32>, _organizerSk: Bytes<32>
     partiers.increment(1);
 
     if (partiers == maxListSize) {
-        // start the party, locally
+
         const localPartyState = startParty();
         // don't trust, verify
         assert(localPartyState == PartyState.READY, "Please start the party, the list is full");
@@ -87,7 +81,6 @@ export circuit chainStartParty(): [] {
     partyState = localPartyState;
 }
 
-// persistentHash is probably better here than persistentCommit?
 circuit commitWithSk(_participantPk: Bytes<32>, _sk: Bytes<32>) : Bytes<32> {
     return disclose(persistentHash<Vector<2, Bytes<32>>>([_participantPk, _sk]));
 }

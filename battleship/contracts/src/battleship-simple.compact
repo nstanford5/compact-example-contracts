@@ -195,9 +195,8 @@ export circuit checkBoard2 (_sk: Bytes<32>) : WinState {
     if(shotState == ShotState.MISS){
         // don't trust, verify
         assert(!board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a MISS, when it was in fact a HIT");
-        // it doesn't get here..
-        turn = TurnState.PLAYER_2_SHOOT;
-    } else if (shotState == ShotState.HIT) {
+    }
+     else if (shotState == ShotState.HIT) {
         // dont trust, verify
         assert(board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a HIT, when is was in fact a MISS. Why would they do that?");
         board2HitCount.increment(1);
@@ -206,7 +205,6 @@ export circuit checkBoard2 (_sk: Bytes<32>) : WinState {
         // did someone win?
         winState = board2HitCount == 2 ? WinState.PLAYER_1_WINS : WinState.CONTINUE_PLAY;
     }
-    // it doesn't get here
     player1Shot.popFront();
     turn = TurnState.PLAYER_2_SHOOT;
     return winState;

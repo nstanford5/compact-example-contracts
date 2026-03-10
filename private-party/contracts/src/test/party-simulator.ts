@@ -63,7 +63,7 @@ export class PartySimulator {
 
     public addParticipant(participantPk: Uint8Array, organizerSk: Uint8Array): void {
         this.circuitContext = this.contract.impureCircuits.addParticipant(
-            this.circuitContext,// this must always be included?
+            this.circuitContext,
             participantPk,
             organizerSk,
         ).context;
@@ -82,15 +82,6 @@ export class PartySimulator {
             this.circuitContext,
         ).context;
     }
-
-    // don't need to write this because it is an internal contract function?
-    // public commitWithSk(participantPk: Uint8Array, organizerSk: Uint8Array): Uint8Array {
-    //     return this.contract.circuits.commitWithSk(
-    //         this.circuitContext,
-    //         participantPk, 
-    //         organizerSk
-    //     ).result;
-    // }
 
     public publicKey(sk: Uint8Array): Uint8Array {
         return this.contract.circuits.publicKey(
