@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__memorizer__search_memories",
+      "Bash(gh run view:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(yarn build)"
+    ]
+  }
+}

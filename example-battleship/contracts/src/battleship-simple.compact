@@ -1,0 +1,229 @@
+pragma language_version 0.21;
+import CompactStandardLibrary;
+
+export enum BoardState { UNSET, SET }
+export enum ShotState { MISS, HIT }
+export enum TurnState {
+    PLAYER_1_SHOOT,
+    PLAYER_1_CHECK,
+    PLAYER_2_SHOOT,
+    PLAYER_2_CHECK,
+}
+export enum WinState {
+    CONTINUE_PLAY,
+    PLAYER_1_WINS,
+    PLAYER_2_WINS
+}
+
+export ledger organizer: Bytes<32>;
+export ledger player1: Bytes<32>;
+export ledger player2: Bytes<32>;
+export ledger turn: TurnState;
+export ledger board1: Set<Bytes<32>>;// linear board shape until the complexity can be increased to 2D
+export ledger board2: Set<Bytes<32>>;// hashed storage of ship locations
+export ledger board1State: BoardState;
+export ledger board2State: BoardState;
+export ledger player1Shot: List<Bytes<32>>;// current shot
+export ledger player2Shot: List<Bytes<32>>;
+export ledger board1Hits: Set<Bytes<32>>;// previous hits stored for later assertions
+export ledger board2Hits: Set<Bytes<32>>;
+export ledger winState: WinState;
+export ledger board1HitCount: Counter;
+export ledger board2HitCount: Counter;
+
+witness localSetBoard1(_x1: Bytes<32>, _x2: Bytes<32>) : BoardState;
+witness localSetBoard2(_x1: Bytes<32>, _x2: Bytes<32>) : BoardState;
+witness localCheckBoard1(x: Bytes<32>) : ShotState;
+witness localCheckBoard2(x: Bytes<32>) : ShotState;
+
+constructor(_sk: Bytes<32>) {
+    // admin sets up the contract
+    const organizerPubKey = publicKey(_sk);
+    organizer = disclose(organizerPubKey);
+    
+    board1State = BoardState.UNSET;
+    board2State = BoardState.UNSET;
+    winState = WinState.CONTINUE_PLAY;
+} 
+
+export circuit setBoard1(_x1: Bytes<32>, _x2: Bytes<32>, _sk: Bytes<32>) : [] {
+    assert(_x1 != _x2, "Cannot use the same number twice");
+    const _x1Num = _x1 as Uint<8>;
+    const _x2Num = _x2 as Uint<8>;
+    assert(_x1Num > 0 && _x2Num > 0, "No zero index, board starts at 1");
+    // assert(_x1 > 0 && _x2 > 0, "No zero index, board starts at 1");
+    // assert(_x1 <= 20 && _x2 <= 20, "Out of bounds, please keep ships on the board");
+    assert(board1State == BoardState.UNSET, "Board 1 has already been set");
+
+    const p1Pub = publicKey(_sk);
+    player1 = disclose(p1Pub);
+
+    // hash the inputs to verify them later, user needs to provide the same value and _sk
+    const hash1 = commitBoardSpace(_x1, _sk);
+    board1.insert(hash1);
+    const hash2 = commitBoardSpace(_x2, _sk);
+    board1.insert(hash2);
+
+    // best practice example -- don't disclose(setBoard(_x1, _x2)), 
+    // disclose only what you need (localBoardState);
+    const localBoardState = localSetBoard1(_x1, _x2);
+    assert(localBoardState == BoardState.SET, "Please update the state of board1 to SET");
+    board1State = disclose(localBoardState);
+}
+
+export circuit setBoard2(_x1: Bytes<32>, _x2: Bytes<32>, _sk: Bytes<32>) : [] {
+    const pub = publicKey(_sk);
+    assert(player1 != disclose(pub), "You cannot play against yourself");
+    assert(board2State == BoardState.UNSET, "There is already a player2");
+    assert(_x1 != _x2, "Cannot use the same number twice");
+    const _x1Num = _x1 as Uint<8>;
+    const _x2Num = _x2 as Uint<8>;
+    assert(_x1Num > 0 && _x2Num > 0, "No zero index, please keep ships on the board");
+    assert(_x1Num <= 20 && _x2Num <= 20, "Out of bounds, please keep ships on the board");
+    // assert(_x1 > 0 && _x2 > 0, "No zero index, please keep ships on the board");
+    // assert(_x1 <= 20 && _x2 <= 20, "Out of bounds, please keep ships on the board");
+
+    player2 = disclose(pub);
+
+    // hash inputs and store them to the ledger for lookup later
+    // maybe this should be a Merkle Tree instead?
+    const hash1 = commitBoardSpace(_x1, _sk);
+    board2.insert(hash1);
+    const hash2 = commitBoardSpace(_x2, _sk);
+    board2.insert(hash2);
+
+    const localBoardState = localSetBoard2(_x1, _x2);
+    assert(localBoardState == BoardState.SET, "Please update the state of your board to SET");
+    board2State = disclose(localBoardState);
+    
+    turn = TurnState.PLAYER_1_SHOOT;
+}
+
+export circuit player1Shoot (x: Bytes<32>, _sk: Bytes<32>): [] {
+    const pub = publicKey(_sk);
+    assert(player1 == disclose(pub), "You are not player1");
+    assert(board2State == BoardState.SET, "Player 2 has not yet set their board");
+    assert(turn == TurnState.PLAYER_1_SHOOT, "It is not player1 turn to shoot");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    const xNum = x as Uint<8>;
+    assert(xNum > 0 && xNum <= 20, "Shot out of bounds, please shoot on the board");
+    // assert(x > 0 && x <= 20, "Shot out of bounds, please shoot on the board");
+    // maybe a redundent check?
+    assert(player1Shot.isEmpty(), "Cheat Detected: Player1: Attempt to double shoot");
+
+    // shots are public knowledge
+    const currentShot = disclose(x);
+    assert(!board2Hits.member(currentShot), "Cheat Detected: Player1: Attempt to repeat a previous HIT");
+
+    player1Shot.pushFront(currentShot);
+    turn = TurnState.PLAYER_2_CHECK;
+}
+
+export circuit player2Shoot(x: Bytes<32>, _sk: Bytes<32>): [] {
+    const pub = publicKey(_sk);
+    assert(player2 == disclose(pub), "You are not player2");
+    assert(turn == TurnState.PLAYER_2_SHOOT, "It is not player2 turn to shoot");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    const xNum = x as Uint<8>;
+    assert(xNum > 0 && xNum <= 20, "Shot out of bounds, please shoot on the board");
+    // assert(x > 0 && x <= 20, "Shot out of bounds, please shoot on the board");
+    assert(player2Shot.isEmpty(), "Cheat Detected: Player2: Attempt to double shoot");
+
+    // shots are public knowledge
+    const currentShot = disclose(x);
+    assert(!board1Hits.member(currentShot), "Cheat Detected: Player2: Attempt to repeat a previous HIT");
+
+    player2Shot.pushFront(currentShot);
+    turn = TurnState.PLAYER_1_CHECK;
+}
+
+export circuit checkBoard1 (_sk: Bytes<32>) : [] {
+    const pub = publicKey(_sk);
+    assert(player1 == disclose(pub), "You are not player1");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(turn == TurnState.PLAYER_1_CHECK, "It is not Player 1 turn to CHECK");
+    assert(!player2Shot.isEmpty(), "No shot to check");
+
+    const currentShot = player2Shot.head().value;
+    const honestyCheckHash = commitBoardSpace(currentShot as Bytes<32>, _sk);
+
+    // currentShot has already been exposed, but we need to satisfy the compiler here too
+    const shotState = disclose(localCheckBoard1(currentShot));
+    assert(shotState == ShotState.HIT || shotState == ShotState.MISS, "Please provide a valid state");
+
+    // suspicion: branching rules are strict, but maybe not the best enforced at the moment?
+    if(shotState == ShotState.MISS){
+        assert(!board1.member(honestyCheckHash), "Cheat Detected: Player 1: claimed a MISS, when it was in fact a HIT");
+        player2Shot.popFront();
+        turn = TurnState.PLAYER_1_SHOOT;
+        //return winState;
+    }
+    if(shotState == ShotState.HIT) {
+        // don't trust, verify
+        assert(board1.member(honestyCheckHash), "Cheat Detected: Player 1: claimed a HIT, when is was in fact a MISS. Why would they do that?");
+        board1HitCount.increment(1);
+        board1Hits.insert(currentShot);
+
+        // did someone win?
+        winState = board1HitCount == 2 ? WinState.PLAYER_2_WINS : WinState.CONTINUE_PLAY;
+        player2Shot.popFront();
+        turn = TurnState.PLAYER_1_SHOOT;
+        //return winState;
+    }
+    //player2Shot.popFront();
+    //turn = TurnState.PLAYER_1_SHOOT;
+    //return winState;
+}
+
+export circuit checkBoard2 (_sk: Bytes<32>) : [] {
+    const pub = publicKey(_sk);
+    assert(player2 == disclose(pub), "You are not player2");
+    assert(board2State == BoardState.SET, "Player 2 has not set the board yet");
+    assert(winState == WinState.CONTINUE_PLAY, "A winner has already been declared");
+    assert(turn == TurnState.PLAYER_2_CHECK, "It is not Player 2 turn to CHECK");
+    assert(!player1Shot.isEmpty(), "No shot to check");
+
+    const currentShot = player1Shot.head().value;
+    assert(!board2Hits.member(currentShot), "Cheat Detected: Player 1: Attempt to repeat a previous HIT");
+
+    // Question: does the inclusion of the _sk in a parameter force the user to sign?
+    // This design could cause a problem if tokens are at stake, though I suppose you
+    // could just assume that the lack of signing is an attempt to cheat
+    const honestyCheckHash = commitBoardSpace(currentShot as Bytes<32>, _sk);
+
+    const shotState = disclose(localCheckBoard2(currentShot));
+    assert(shotState == ShotState.HIT || shotState == ShotState.MISS, "Please provide a valid state");
+
+    if(shotState == ShotState.MISS){
+        // don't trust, verify
+        assert(!board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a MISS, when it was in fact a HIT");
+        player1Shot.popFront();
+        turn = TurnState.PLAYER_2_SHOOT;
+        //return winState;
+    }
+    if(shotState == ShotState.HIT) {
+        // dont trust, verify
+        assert(board2.member(honestyCheckHash), "Cheat Detected: Player 2: claimed a HIT, when is was in fact a MISS. Why would they do that?");
+        board2HitCount.increment(1);
+        board2Hits.insert(currentShot);
+
+        // did someone win?
+        winState = board2HitCount == 2 ? WinState.PLAYER_1_WINS : WinState.CONTINUE_PLAY;
+        player1Shot.popFront();
+        turn = TurnState.PLAYER_2_SHOOT;
+        //return winState;
+    }
+    //player1Shot.popFront();
+    //turn = TurnState.PLAYER_2_SHOOT;
+    //return winState;
+}
+
+// Question: should I be using persistenCommit here? Or is the hash sufficient, because I am
+// also passing it the _sk? Is that best practice?
+export circuit commitBoardSpace(_x: Bytes<32>, _sk: Bytes<32>) : Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([_x, _sk]));
+}
+
+export circuit publicKey(_sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "battleship-full:pk:"), _sk]);
+}

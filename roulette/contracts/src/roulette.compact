@@ -1,0 +1,127 @@
+// provably fair version of the casino game roulette
+// "the house" can prove that it revealed the number
+// and that number did not change based on the users bet
+
+// What needs to happen?
+// 1. Hash winning number, color (the-house) (done)
+// 2. place bets (users) (done)
+// 3. Reveal winning number, color (done)
+// 4. Assign winners (done)
+// 5. [later] pay out
+
+// Utils
+// number => color, 1-12, 13-26, 27-36
+
+pragma language_version 0.21;
+import CompactStandardLibrary;
+
+export enum ReadyState {
+    NOT_READY,
+    READY
+}
+
+// not really using this yet
+export enum Color {
+    GREEN,
+    RED,
+    BLACK
+}
+
+// @TODO -- does the design (specifically of the Map structure)
+// mean that each number can only be bet on once?
+// maybe it should be re-arranged by Address?
+export ledger theHouse: ZswapCoinPublicKey;
+export ledger maxBet: Uint<8>;
+export ledger winningNumHash: Bytes<32>;
+export ledger winningNumPublic: Uint<8>;
+export ledger readyState: ReadyState;
+// numberToBetOn, Map<address, betAmount>
+export ledger playerList: Map<Uint<8>, Map<ZswapCoinPublicKey, Uint<8>>>;
+// address, betAmount
+export ledger winnerList: Map<ZswapCoinPublicKey, Uint<8>>;
+export ledger color: Color;
+
+
+constructor(setMaxBet: Uint<8>, _winningNum: Uint<8>, _sk: Bytes<32>) {
+    // single zero roulette for everyone
+    assert(_winningNum >= 0 && _winningNum <= 36, "Cheat Detected: theHouse: Please keep the number on the table");
+    // assign public admin address
+    const admin = ownPublicKey();
+    theHouse = disclose(admin);
+
+    maxBet = disclose(setMaxBet);
+
+    // hash winning number, post to ledger
+    const hash = commitWithSk(_winningNum as Bytes<32>, _sk);
+    winningNumHash = hash;
+    // assign ready state to accept wagers
+    readyState = ReadyState.READY;
+}
+
+// placeBet(amount, number)
+// @TODO -- add different bet functions for different types
+export circuit placeBet(amount: Uint<8>, number: Uint<8>) : [] {
+    assert(readyState == ReadyState.READY, "Not ready to accept bets yet");
+    assert(playerList.size() < 10, "Sorry, the table is full");
+    const player = disclose(ownPublicKey());
+    assert(number >= 0 && number <= 36, "Please keep the number on the board");
+    assert(amount <= maxBet, "Sorry, your bet is too high");
+    
+    const pubAmount = disclose(amount);
+
+    // initialize the nested map with default values for the given number
+    playerList.insert(disclose(number), default<Map<ZswapCoinPublicKey, Uint<8>>>);
+    playerList.lookup(number).insert(player, pubAmount);
+}
+
+export circuit revealWinningNumber(winningNum: Uint<8>, _sk: Bytes<32>): [] {
+    assert(ownPublicKey() == theHouse, "Only the House can reveal the number");
+    const hash = commitWithSk(winningNum as Bytes<32>, _sk);
+    assert(hash == winningNumHash, "Cheat Detected: theHouse: tried to change the winning number");
+    winningNumPublic = disclose(winningNum);
+    color = getColor(winningNumPublic);
+}
+
+export circuit checkForWin(number: Uint<8>, amount: Uint<8>): [] {
+    const pubAddress = disclose(ownPublicKey());
+    assert(pubAddress != theHouse, "Only players can check for a win");
+    assert(playerList.lookup(number).member(pubAddress), "You don't have a winning number");
+    const bet = playerList.lookup(number).lookup(pubAddress);
+    // add to winners Map
+    winnerList.insert(pubAddress, disclose(bet));
+}
+
+circuit getColor(num: Uint<8>) : Color {
+    if(num == 0){
+        return Color.GREEN;
+    }
+    if(
+        num == 1 ||
+        num == 3 ||
+        num == 5 ||
+        num == 7 ||
+        num == 9 ||
+        num == 11 ||
+        num == 13 ||
+        num == 15 ||
+        num == 17 ||
+        num == 19 ||
+        num == 21 ||
+        num == 23 ||
+        num == 25 ||
+        num == 27 ||
+        num == 29 ||
+        num == 31 ||
+        num == 33 ||
+        num == 35
+    ) { 
+        return Color.RED;   
+    }
+    else {
+        return Color.BLACK;
+    }
+}
+
+circuit commitWithSk(_winningNum: Bytes<32>, _sk: Bytes<32>) : Bytes<32> {
+    return disclose(persistentHash<Vector<2, Bytes<32>>>([_winningNum, _sk]));
+}
