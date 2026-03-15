@@ -38,14 +38,14 @@ describe("Raffle Smart Contract", () => {
 
         const fred = new WalletBuilder();
         const greg = new WalletBuilder();
-        const hector = new WalletBuilder();
+        const harold = new WalletBuilder();
         const idris = new WalletBuilder();
         const joe = new WalletBuilder();
         const kat = new WalletBuilder();// 10
 
         sim.getTicket(fred.sk);
         sim.getTicket(greg.sk);
-        sim.getTicket(hector.sk);
+        sim.getTicket(harold.sk);
         sim.getTicket(idris.sk);
         sim.getTicket(joe.sk);
         sim.getTicket(kat.sk);
@@ -67,7 +67,7 @@ describe("Raffle Smart Contract", () => {
         const ezra = new WalletBuilder();
         const fred = new WalletBuilder();
         const greg = new WalletBuilder();
-        const hector = new WalletBuilder();
+        const harold = new WalletBuilder();
         const idris = new WalletBuilder();
         const joe = new WalletBuilder();
         const kat = new WalletBuilder();// 10
@@ -79,7 +79,7 @@ describe("Raffle Smart Contract", () => {
         sim.getTicket(ezra.sk);
         sim.getTicket(fred.sk);
         sim.getTicket(greg.sk);
-        sim.getTicket(hector.sk);
+        sim.getTicket(harold.sk);
         sim.getTicket(idris.sk);
         sim.getTicket(joe.sk);
         sim.getTicket(kat.sk);
@@ -106,7 +106,7 @@ describe("Raffle Smart Contract", () => {
         const ezra = new WalletBuilder();
         const fred = new WalletBuilder();
         const greg = new WalletBuilder();
-        const hector = new WalletBuilder();
+        const harold = new WalletBuilder();
         const idris = new WalletBuilder();
         const joe = new WalletBuilder();
         const kat = new WalletBuilder();// 10
@@ -118,7 +118,7 @@ describe("Raffle Smart Contract", () => {
         sim.getTicket(ezra.sk);
         sim.getTicket(fred.sk);// winner
         sim.getTicket(greg.sk);
-        sim.getTicket(hector.sk);
+        sim.getTicket(harold.sk);
         sim.getTicket(idris.sk);
         sim.getTicket(joe.sk);
         sim.getTicket(kat.sk);
@@ -156,7 +156,7 @@ describe("Raffle Smart Contract", () => {
         const ezra = new WalletBuilder();
         const fred = new WalletBuilder();
         const greg = new WalletBuilder();
-        const hector = new WalletBuilder();
+        const harold = new WalletBuilder();
         const idris = new WalletBuilder();
         const joe = new WalletBuilder();
         const kat = new WalletBuilder();// 10
@@ -168,7 +168,8 @@ describe("Raffle Smart Contract", () => {
         sim.getTicket(ezra.sk);
         sim.getTicket(fred.sk);
         sim.getTicket(greg.sk);
-        sim.getTicket(hector.sk);
+        sim.getTicket(harold
+.sk);
         sim.getTicket(idris.sk);
         sim.getTicket(joe.sk);
         sim.getTicket(kat.sk);

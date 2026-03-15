@@ -34,6 +34,7 @@ export class RaffleSimulator {
         this.aliceAddress = sampleUserAddress();
         this.aliceSk = randomBytes(32);
         this.alicePrivateState = createRafflePrivateState(WinnerState.UNSET, this.aliceSk);
+
         const {
             currentPrivateState,
             currentContractState,
@@ -60,12 +61,14 @@ export class RaffleSimulator {
             sk
         ).result;
     }
+
     public getTicket(sk: Uint8Array): void {
         this.circuitContext = this.contract.impureCircuits.getTicket(
             this.circuitContext,
             sk
         ).context;
     }
+
     public revealWinner(winningNum: bigint, sk: Uint8Array): void {
         this.circuitContext = this.contract.impureCircuits.revealWinner(
             this.circuitContext,
@@ -73,14 +76,13 @@ export class RaffleSimulator {
             sk
         ).context;
     }
-    // triggers state change to be looked up on ledger later
+
     public claimWin(sk: Uint8Array): void {
         this.circuitContext = this.contract.impureCircuits.claimWin(
             this.circuitContext,
             sk
         ).context;
     }
-
 
     // helper functions
     public getLedger(): Ledger {
