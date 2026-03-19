@@ -1,55 +1,93 @@
 /**
     Silent Auctin where the organizer can set a minimum price
     that remains unknown to bidders until the max number of bids
-    has been reached. Bidders are aware of each others bids and current highest bid.
+    has been reached. Bidders are aware of each others bids and current highest bid, 
+    but the identity of bidders is private
 **/
-pragma language_version 0.21;
+pragma language_version 0.22;
 import CompactStandardLibrary;
+
+export enum AuctionState {
+    CLOSED,
+    OPEN
+}
 
 export ledger auctionOrganizer: ZswapCoinPublicKey;
 export ledger hiddenPrice: Bytes<32>;
 export ledger publicPrice: Uint<8>;
+export ledger maxBids: Uint<8>;
 export ledger bidders: Map<Bytes<32>, Uint<8>>;
 export ledger bidCount: Counter;
 export ledger highestBid: Uint<8>;
+export ledger auctionState: AuctionState;
 
-constructor(sk: Bytes<32>, minPrice: Uint<8>) {
+witness localSk(): Bytes<32>;
+
+constructor(_minPrice: Uint<8>, maxBidCount: Uint<8>) {
     auctionOrganizer = ownPublicKey();
-    hiddenPrice = commitWithSk(minPrice as Bytes<32>, sk);
+    const _sk = localSk();
+    const hashedPrice = commitWithSk(_minPrice as Bytes<32>, _sk);
+
+    maxBids = disclose(maxBidCount);
+    hiddenPrice = hashedPrice;
     highestBid = 0;
+    auctionState = AuctionState.OPEN;
 }
 
-export circuit bid(pk: Bytes<32>, bidAmount: Uint<8>): [] {
-    assert(bidCount < 9, "Bids full!");
+// bidders can bid more than once
+export circuit bid(bidAmount: Uint<8>): [] {
+    assert(bidCount < maxBids, "Bids full!");
+    const _sk = localSk();
+    const key = publicKey(_sk);
+    const pubKey = disclose(key);
     const publicBid = disclose(bidAmount);
-    const publicPk = disclose(pk);
-    if(bidders.member(publicPk)){
-        assert(bidders.lookup(publicPk) < publicBid, "New bid too low");
+
+    if(bidders.member(pubKey)){
+        assert(bidders.lookup(pubKey) < publicBid, "New bid lower than your previous bid");
     }
-    bidders.insert(publicPk, publicBid);
+    bidders.insert(pubKey, publicBid);
     bidCount.increment(1);
     if(publicBid > highestBid){
         highestBid = publicBid;
     }
+    if(bidCount == maxBids){
+        auctionState = AuctionState.CLOSED;
+    }
 }
 
-export circuit revealWin(minPrice: Uint<8>, sk: Bytes<32>): Uint<8> {
+// allow the organizer to close the auction if maxBids is not reached
+export circuit closeAuction(minPrice: Uint<8>): Uint<8> {
+    assert(ownPublicKey() == auctionOrganizer, "You are not the auction organizer");
+    assert(auctionState == AuctionState.OPEN, "The auction has already been closed");
+
+    auctionState = AuctionState.CLOSED;
+    return revealWin(minPrice);
+}
+
+export circuit revealWin(minPrice: Uint<8>): Uint<8> {
     assert(auctionOrganizer == ownPublicKey(), "You are not the auction organizer");
-    assert(bidCount == 9, "Bidding is not complete until 9 bids have been received");
-    assert(commitWithSk(minPrice as Bytes<32>, sk) == hiddenPrice, "Attempt to change min price detected, shame on you.");
+    assert(auctionState == AuctionState.CLOSED, "The auction is still open");
+    
+    const _sk = localSk();
+    const hashedPrice = commitWithSk(minPrice as Bytes<32>, _sk);
+    assert(hashedPrice == hiddenPrice, "Attempt to change min price detected, shame on you.");
     
     // all votes are in, public price can be revealed
     publicPrice = disclose(minPrice);
 
     // if the publicPrice is not met, the highestBid doesn't matter
-    assert(highestBid > publicPrice, "Minimum bid amount not met");
-    return highestBid;
+    if(highestBid > publicPrice){
+        return 0;
+    } else {
+        return highestBid;
+    }
 }
 
-circuit commitWithSk(minPrice: Bytes<32>, sk: Bytes<32>): Bytes<32> {
-    return disclose(persistentHash<Vector<2, Bytes<32>>>([minPrice, sk]));
+circuit commitWithSk(_minPrice: Bytes<32>, _sk: Bytes<32>): Bytes<32> {
+    const hash = persistentHash<Vector<2, Bytes<32>>>([_minPrice, _sk]);
+    return disclose(hash);
 }
 
-export circuit publicKey(sk: Bytes<32>): Bytes<32> {
-    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "silent-auction:pk:"), sk]);
+export circuit publicKey(_sk: Bytes<32>): Bytes<32> {
+    return persistentHash<Vector<2, Bytes<32>>>([pad(32, "silent-auction:pk:"), _sk]);
 }
