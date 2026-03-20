@@ -1,4 +1,4 @@
-pragma language_version 0.21;
+pragma language_version 0.22;
 import CompactStandardLibrary;
 
 export enum WinnerState {
@@ -6,8 +6,8 @@ export enum WinnerState {
     SET
 }
 
-export ledger raffleOrganizer: Bytes<32>;
-export ledger hashedWinningNum: Bytes<32>;
+export sealed ledger raffleOrganizer: Bytes<32>;
+export sealed ledger hashedWinningNum: Bytes<32>;
 export ledger publicWinningNum: Uint<8>;
 export ledger winner: Bytes<32>;
 export ledger state: WinnerState;

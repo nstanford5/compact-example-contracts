@@ -1,5 +1,5 @@
 import * as __compactRuntime from '@midnight-ntwrk/compact-runtime';
-__compactRuntime.checkRuntimeVersion('0.14.0');
+__compactRuntime.checkRuntimeVersion('0.15.0');
 
 export var WinnerState;
 (function (WinnerState) {
@@ -191,6 +191,11 @@ export class Contract {
       revealWinner: this.circuits.revealWinner,
       claimWin: this.circuits.claimWin
     };
+    this.provableCircuits = {
+      getTicket: this.circuits.getTicket,
+      revealWinner: this.circuits.revealWinner,
+      claimWin: this.circuits.claimWin
+    };
   }
   initialState(...args_0) {
     if (args_0.length !== 3) {
@@ -377,20 +382,20 @@ export class Contract {
                             ===
                             0,
                             'A winner has already been declared');
-    __compactRuntime.assert(_descriptor_4.fromValue(__compactRuntime.queryLedgerState(context,
-                                                                                      partialProofData,
-                                                                                      [
-                                                                                       { dup: { n: 0 } },
-                                                                                       { idx: { cached: false,
-                                                                                                pushPath: false,
-                                                                                                path: [
-                                                                                                       { tag: 'value',
-                                                                                                         value: { value: _descriptor_1.toValue(5n),
-                                                                                                                  alignment: _descriptor_1.alignment() } }] } },
-                                                                                       { popeq: { cached: true,
-                                                                                                  result: undefined } }]).value)
-                            <
-                            10n,
+    let t_0;
+    __compactRuntime.assert((t_0 = _descriptor_4.fromValue(__compactRuntime.queryLedgerState(context,
+                                                                                             partialProofData,
+                                                                                             [
+                                                                                              { dup: { n: 0 } },
+                                                                                              { idx: { cached: false,
+                                                                                                       pushPath: false,
+                                                                                                       path: [
+                                                                                                              { tag: 'value',
+                                                                                                                value: { value: _descriptor_1.toValue(5n),
+                                                                                                                         alignment: _descriptor_1.alignment() } }] } },
+                                                                                              { popeq: { cached: true,
+                                                                                                         result: undefined } }]).value),
+                             t_0 < 10n),
                             'Max tickets reached');
     const pubKey_0 = this._publicKey_0(_sk_0);
     __compactRuntime.assert(!_descriptor_2.fromValue(__compactRuntime.queryLedgerState(context,

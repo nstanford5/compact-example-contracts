@@ -13,6 +13,14 @@ export type ImpureCircuits<PS> = {
   claimWin(context: __compactRuntime.CircuitContext<PS>, sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
 }
 
+export type ProvableCircuits<PS> = {
+  getTicket(context: __compactRuntime.CircuitContext<PS>, _sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  revealWinner(context: __compactRuntime.CircuitContext<PS>,
+               winningNum_0: bigint,
+               sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+  claimWin(context: __compactRuntime.CircuitContext<PS>, sk_0: Uint8Array): __compactRuntime.CircuitResults<PS, []>;
+}
+
 export type PureCircuits = {
   publicKey(sk_0: Uint8Array): Uint8Array;
 }
@@ -50,6 +58,7 @@ export declare class Contract<PS = any, W extends Witnesses<PS> = Witnesses<PS>>
   witnesses: W;
   circuits: Circuits<PS>;
   impureCircuits: ImpureCircuits<PS>;
+  provableCircuits: ProvableCircuits<PS>;
   constructor(witnesses: W);
   initialState(context: __compactRuntime.ConstructorContext<PS>,
                winningNum_0: bigint,

@@ -1,8 +1,7 @@
 import CompactStandardLibrary;
 
-/**
- * Mint using mintUnshieldedToken() + receiveUnshielded()
- */
+
+// Mint using mintUnshieldedToken() + receiveUnshielded()
 export circuit mintAndReceive(amount: Uint<64>): Bytes<32> {
     const domain = pad(32, "simple:receive");
 
@@ -16,9 +15,7 @@ export circuit mintAndReceive(amount: Uint<64>): Bytes<32> {
     return color;
 }
 
-/**
- * Send to user address
- */
+// Send to user address
 export circuit sendToUser(amount: Uint<64>, user_addr: UserAddress): [] {
     const domain = pad(32, "simple:receive");
     const color = tokenType(disclose(domain), kernel.self());
